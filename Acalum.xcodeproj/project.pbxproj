@@ -1,0 +1,654 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 77;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		0B47806ED321AC50C081F2A3 /* PillTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = FEC655973FFF121300D27C28 /* PillTests.swift */; };
+		0EE5DE9BEED9A182A8D9C56D /* PlaybackQueue.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6D9B8F0A6308250C2A6A57F2 /* PlaybackQueue.swift */; };
+		13BF422DA149F30719A7E3E6 /* PlayerViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F48E2C70BB772A143C24169 /* PlayerViewModel.swift */; };
+		1A7C5ADE158467C56C0B505B /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = ACF15090065A4147AE41F8A0 /* Assets.xcassets */; };
+		1C903392C438B3164F81BF55 /* LocalStoreTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7D6684AE09710AEF54496BA2 /* LocalStoreTests.swift */; };
+		1DA49190CC5EF5AAB1DEC349 /* FeedbackEventStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0DA312BF84FEFF365C52DF09 /* FeedbackEventStore.swift */; };
+		1DC4F96569B0EB26F33AD238 /* FeedbackTracker.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1D77F939C1D2B5CC27A0F5A9 /* FeedbackTracker.swift */; };
+		256428C30EC0621122FECAF8 /* PillSelectorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF67F63EFCD045E59AE53F3F /* PillSelectorView.swift */; };
+		26C9D74F6978B285E4D89178 /* PromptBarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 50AA3A91208CA4B28CC90D08 /* PromptBarView.swift */; };
+		2897AFEFFC20F481BB391BB3 /* NowPlayingCardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 42893302E5592467E3FD8C6B /* NowPlayingCardView.swift */; };
+		36F18D95A3439F94B150F8E2 /* AudioPlayerService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5B12BD7FB8C7307341132EA9 /* AudioPlayerService.swift */; };
+		394C2C2CB43E85365C55057D /* FeedbackTrackerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 014AB118028B725421D5F13C /* FeedbackTrackerTests.swift */; };
+		54E3A6D78077DBC80A03ED50 /* TrackInfoSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 36520687EC320F8C49EAC7DB /* TrackInfoSheet.swift */; };
+		56CAD191298C1BCAB7408D68 /* TrackTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B7283315ECCB546AF932821D /* TrackTests.swift */; };
+		6DE88BE834CFEF7D9CEA6B85 /* MockQueueService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 29C72C504761D4C1D877669B /* MockQueueService.swift */; };
+		75D049F4E6C54AD380A7FBC0 /* SessionStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7D658648CA955E74430D3ADD /* SessionStore.swift */; };
+		7850FD31140F74269CD86047 /* AcalumApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 01469F9A23AA8FFE40EED247 /* AcalumApp.swift */; };
+		80D258048994F5DFE9AFF851 /* SettingsSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 672F7C64B53F9F7159B4A161 /* SettingsSheet.swift */; };
+		9D310DDBD98BC0B4EE6F9BD0 /* MockData.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8C16513EF65096B0A8DEBAB6 /* MockData.swift */; };
+		9EB0B4428701F6A3D6D1ACF1 /* LocalStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 04A1B14EF2D95945740D8F10 /* LocalStore.swift */; };
+		A5E193A644DE2C0E7CB0FF70 /* Track.swift in Sources */ = {isa = PBXBuildFile; fileRef = F61FB61D6470633D72D4E21F /* Track.swift */; };
+		AA6C4E28107D2F6DA3F9ED5E /* PlayerHomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BDDB159348CB19E26B2B802F /* PlayerHomeView.swift */; };
+		AE816792FBBB1AC1D5564374 /* PlaybackControlsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C31A483C0FAC37EABF445DD2 /* PlaybackControlsView.swift */; };
+		B5A9749D0DEABA2B0C8FE2A4 /* Typography.swift in Sources */ = {isa = PBXBuildFile; fileRef = BAFD110A5F87635210F88EEC /* Typography.swift */; };
+		BD2DBF48DCAD509E26DE55EF /* PlaybackState.swift in Sources */ = {isa = PBXBuildFile; fileRef = F9989ADB1B65F1760A78B562 /* PlaybackState.swift */; };
+		C4D3FA97871A4A42B91AE4BD /* PlaybackQueueTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D5C16353C3D50A9114E7F338 /* PlaybackQueueTests.swift */; };
+		C5F630C9DB016A86F980F79D /* APIClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = ABC21E83903DC992C824D5D2 /* APIClient.swift */; };
+		CD654C2622FDFB9A281F6224 /* DTOs.swift in Sources */ = {isa = PBXBuildFile; fileRef = 24D96649DF1C25E5ADB62E48 /* DTOs.swift */; };
+		D2E8C915254BD92E01915DA1 /* DiscoveryContext.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3B6E6500D1A3D9AE80E33826 /* DiscoveryContext.swift */; };
+		D6B4902AC98AA1182D3F9197 /* Pill.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7005719932AA9C9B693614D1 /* Pill.swift */; };
+		DAE1C94F5B23A1BDDF8D36AC /* FeedbackEvent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 126D19C5FE06465C5C34F865 /* FeedbackEvent.swift */; };
+		DD6F89E6516B7BC4E7CD2740 /* WhyThisSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6D839E2E9A01EF1DA9B78E18 /* WhyThisSheet.swift */; };
+		E8E4C9C14F833A00DFA4CBF5 /* Spacing.swift in Sources */ = {isa = PBXBuildFile; fileRef = 668E8FFBAD5AAABA00B05518 /* Spacing.swift */; };
+		ED7B2F8AAFF4514F89E50180 /* AmbientArtworkView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B7A9D85FFF7D304700181407 /* AmbientArtworkView.swift */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		4A62384A5248230CA6549A05 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 0A0202A05872C92BDE59C507 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 0F07DD1B4D05E0994E14D192;
+			remoteInfo = Acalum;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXFileReference section */
+		01469F9A23AA8FFE40EED247 /* AcalumApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AcalumApp.swift; sourceTree = "<group>"; };
+		014AB118028B725421D5F13C /* FeedbackTrackerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FeedbackTrackerTests.swift; sourceTree = "<group>"; };
+		04A1B14EF2D95945740D8F10 /* LocalStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocalStore.swift; sourceTree = "<group>"; };
+		0DA312BF84FEFF365C52DF09 /* FeedbackEventStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FeedbackEventStore.swift; sourceTree = "<group>"; };
+		126D19C5FE06465C5C34F865 /* FeedbackEvent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FeedbackEvent.swift; sourceTree = "<group>"; };
+		1D77F939C1D2B5CC27A0F5A9 /* FeedbackTracker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FeedbackTracker.swift; sourceTree = "<group>"; };
+		1ED78F6F702359A3202A30C2 /* Acalum.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = Acalum.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		24D96649DF1C25E5ADB62E48 /* DTOs.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DTOs.swift; sourceTree = "<group>"; };
+		29C72C504761D4C1D877669B /* MockQueueService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MockQueueService.swift; sourceTree = "<group>"; };
+		36520687EC320F8C49EAC7DB /* TrackInfoSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TrackInfoSheet.swift; sourceTree = "<group>"; };
+		3B6E6500D1A3D9AE80E33826 /* DiscoveryContext.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiscoveryContext.swift; sourceTree = "<group>"; };
+		42893302E5592467E3FD8C6B /* NowPlayingCardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NowPlayingCardView.swift; sourceTree = "<group>"; };
+		50AA3A91208CA4B28CC90D08 /* PromptBarView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PromptBarView.swift; sourceTree = "<group>"; };
+		5B12BD7FB8C7307341132EA9 /* AudioPlayerService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioPlayerService.swift; sourceTree = "<group>"; };
+		668E8FFBAD5AAABA00B05518 /* Spacing.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Spacing.swift; sourceTree = "<group>"; };
+		672F7C64B53F9F7159B4A161 /* SettingsSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsSheet.swift; sourceTree = "<group>"; };
+		6D839E2E9A01EF1DA9B78E18 /* WhyThisSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WhyThisSheet.swift; sourceTree = "<group>"; };
+		6D9B8F0A6308250C2A6A57F2 /* PlaybackQueue.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlaybackQueue.swift; sourceTree = "<group>"; };
+		7005719932AA9C9B693614D1 /* Pill.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Pill.swift; sourceTree = "<group>"; };
+		7D658648CA955E74430D3ADD /* SessionStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionStore.swift; sourceTree = "<group>"; };
+		7D6684AE09710AEF54496BA2 /* LocalStoreTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocalStoreTests.swift; sourceTree = "<group>"; };
+		8C16513EF65096B0A8DEBAB6 /* MockData.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MockData.swift; sourceTree = "<group>"; };
+		8DD89E74000386B14B4782D0 /* AcalumTests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = AcalumTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		9F48E2C70BB772A143C24169 /* PlayerViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlayerViewModel.swift; sourceTree = "<group>"; };
+		ABC21E83903DC992C824D5D2 /* APIClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = APIClient.swift; sourceTree = "<group>"; };
+		ACF15090065A4147AE41F8A0 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		B7283315ECCB546AF932821D /* TrackTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TrackTests.swift; sourceTree = "<group>"; };
+		B7A9D85FFF7D304700181407 /* AmbientArtworkView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AmbientArtworkView.swift; sourceTree = "<group>"; };
+		BAFD110A5F87635210F88EEC /* Typography.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Typography.swift; sourceTree = "<group>"; };
+		BDDB159348CB19E26B2B802F /* PlayerHomeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlayerHomeView.swift; sourceTree = "<group>"; };
+		BF67F63EFCD045E59AE53F3F /* PillSelectorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PillSelectorView.swift; sourceTree = "<group>"; };
+		C31A483C0FAC37EABF445DD2 /* PlaybackControlsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlaybackControlsView.swift; sourceTree = "<group>"; };
+		D5C16353C3D50A9114E7F338 /* PlaybackQueueTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlaybackQueueTests.swift; sourceTree = "<group>"; };
+		F61FB61D6470633D72D4E21F /* Track.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Track.swift; sourceTree = "<group>"; };
+		F9989ADB1B65F1760A78B562 /* PlaybackState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlaybackState.swift; sourceTree = "<group>"; };
+		FEC655973FFF121300D27C28 /* PillTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PillTests.swift; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXGroup section */
+		0A94840AE037E42D6AC837E7 /* Acalum */ = {
+			isa = PBXGroup;
+			children = (
+				37B9787D66C6E1F40F6736B2 /* App */,
+				E60AD4D70A19AC7F624DEBB9 /* Audio */,
+				621B7D7D68164D65347C15C2 /* DesignSystem */,
+				F304D95BC042CD72165E0587 /* Features */,
+				2A66A24086D914ED0662555A /* Mocks */,
+				AA2E47511104533D887B4A2E /* Models */,
+				ABAE86932C31F428B77BC79C /* Networking */,
+				2645009A0F3DB0C9337BC577 /* Persistence */,
+				FB564132989852EB468C18E6 /* Recommendation */,
+				8F2EA8E61D17CBD406BED5C0 /* Resources */,
+			);
+			path = Acalum;
+			sourceTree = "<group>";
+		};
+		2645009A0F3DB0C9337BC577 /* Persistence */ = {
+			isa = PBXGroup;
+			children = (
+				0DA312BF84FEFF365C52DF09 /* FeedbackEventStore.swift */,
+				04A1B14EF2D95945740D8F10 /* LocalStore.swift */,
+				7D658648CA955E74430D3ADD /* SessionStore.swift */,
+			);
+			path = Persistence;
+			sourceTree = "<group>";
+		};
+		2A66A24086D914ED0662555A /* Mocks */ = {
+			isa = PBXGroup;
+			children = (
+				8C16513EF65096B0A8DEBAB6 /* MockData.swift */,
+				29C72C504761D4C1D877669B /* MockQueueService.swift */,
+			);
+			path = Mocks;
+			sourceTree = "<group>";
+		};
+		37B9787D66C6E1F40F6736B2 /* App */ = {
+			isa = PBXGroup;
+			children = (
+				01469F9A23AA8FFE40EED247 /* AcalumApp.swift */,
+			);
+			path = App;
+			sourceTree = "<group>";
+		};
+		4EBA159026F73AAAEFCE7F88 /* Discovery */ = {
+			isa = PBXGroup;
+			children = (
+				BF67F63EFCD045E59AE53F3F /* PillSelectorView.swift */,
+				50AA3A91208CA4B28CC90D08 /* PromptBarView.swift */,
+			);
+			path = Discovery;
+			sourceTree = "<group>";
+		};
+		621B7D7D68164D65347C15C2 /* DesignSystem */ = {
+			isa = PBXGroup;
+			children = (
+				668E8FFBAD5AAABA00B05518 /* Spacing.swift */,
+				BAFD110A5F87635210F88EEC /* Typography.swift */,
+			);
+			path = DesignSystem;
+			sourceTree = "<group>";
+		};
+		651777D97D805E44E50F5DEF /* TrackInfo */ = {
+			isa = PBXGroup;
+			children = (
+				36520687EC320F8C49EAC7DB /* TrackInfoSheet.swift */,
+				6D839E2E9A01EF1DA9B78E18 /* WhyThisSheet.swift */,
+			);
+			path = TrackInfo;
+			sourceTree = "<group>";
+		};
+		726A59F68EFAC5483FB8BE80 = {
+			isa = PBXGroup;
+			children = (
+				0A94840AE037E42D6AC837E7 /* Acalum */,
+				D60F651BFF77D7719594F93E /* AcalumTests */,
+				C214B6F19284A6F637028ED0 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		8F2EA8E61D17CBD406BED5C0 /* Resources */ = {
+			isa = PBXGroup;
+			children = (
+				ACF15090065A4147AE41F8A0 /* Assets.xcassets */,
+			);
+			path = Resources;
+			sourceTree = "<group>";
+		};
+		AA2E47511104533D887B4A2E /* Models */ = {
+			isa = PBXGroup;
+			children = (
+				3B6E6500D1A3D9AE80E33826 /* DiscoveryContext.swift */,
+				126D19C5FE06465C5C34F865 /* FeedbackEvent.swift */,
+				7005719932AA9C9B693614D1 /* Pill.swift */,
+				F9989ADB1B65F1760A78B562 /* PlaybackState.swift */,
+				F61FB61D6470633D72D4E21F /* Track.swift */,
+			);
+			path = Models;
+			sourceTree = "<group>";
+		};
+		ABAE86932C31F428B77BC79C /* Networking */ = {
+			isa = PBXGroup;
+			children = (
+				ABC21E83903DC992C824D5D2 /* APIClient.swift */,
+				24D96649DF1C25E5ADB62E48 /* DTOs.swift */,
+			);
+			path = Networking;
+			sourceTree = "<group>";
+		};
+		C214B6F19284A6F637028ED0 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				1ED78F6F702359A3202A30C2 /* Acalum.app */,
+				8DD89E74000386B14B4782D0 /* AcalumTests.xctest */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		CF8F376F07542F0025A42015 /* Player */ = {
+			isa = PBXGroup;
+			children = (
+				B7A9D85FFF7D304700181407 /* AmbientArtworkView.swift */,
+				42893302E5592467E3FD8C6B /* NowPlayingCardView.swift */,
+				C31A483C0FAC37EABF445DD2 /* PlaybackControlsView.swift */,
+				BDDB159348CB19E26B2B802F /* PlayerHomeView.swift */,
+				9F48E2C70BB772A143C24169 /* PlayerViewModel.swift */,
+			);
+			path = Player;
+			sourceTree = "<group>";
+		};
+		D60F651BFF77D7719594F93E /* AcalumTests */ = {
+			isa = PBXGroup;
+			children = (
+				014AB118028B725421D5F13C /* FeedbackTrackerTests.swift */,
+				7D6684AE09710AEF54496BA2 /* LocalStoreTests.swift */,
+				FEC655973FFF121300D27C28 /* PillTests.swift */,
+				D5C16353C3D50A9114E7F338 /* PlaybackQueueTests.swift */,
+				B7283315ECCB546AF932821D /* TrackTests.swift */,
+			);
+			path = AcalumTests;
+			sourceTree = "<group>";
+		};
+		DE924046C2891390C57F0BB9 /* Settings */ = {
+			isa = PBXGroup;
+			children = (
+				672F7C64B53F9F7159B4A161 /* SettingsSheet.swift */,
+			);
+			path = Settings;
+			sourceTree = "<group>";
+		};
+		E60AD4D70A19AC7F624DEBB9 /* Audio */ = {
+			isa = PBXGroup;
+			children = (
+				5B12BD7FB8C7307341132EA9 /* AudioPlayerService.swift */,
+				6D9B8F0A6308250C2A6A57F2 /* PlaybackQueue.swift */,
+			);
+			path = Audio;
+			sourceTree = "<group>";
+		};
+		F304D95BC042CD72165E0587 /* Features */ = {
+			isa = PBXGroup;
+			children = (
+				4EBA159026F73AAAEFCE7F88 /* Discovery */,
+				CF8F376F07542F0025A42015 /* Player */,
+				DE924046C2891390C57F0BB9 /* Settings */,
+				651777D97D805E44E50F5DEF /* TrackInfo */,
+			);
+			path = Features;
+			sourceTree = "<group>";
+		};
+		FB564132989852EB468C18E6 /* Recommendation */ = {
+			isa = PBXGroup;
+			children = (
+				1D77F939C1D2B5CC27A0F5A9 /* FeedbackTracker.swift */,
+			);
+			path = Recommendation;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		0F07DD1B4D05E0994E14D192 /* Acalum */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 1ACDC20EBB06A8C10D4F1259 /* Build configuration list for PBXNativeTarget "Acalum" */;
+			buildPhases = (
+				7F928C84F1A2CA657C175890 /* Sources */,
+				67DDDF08E890F8165AEE18B5 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = Acalum;
+			packageProductDependencies = (
+			);
+			productName = Acalum;
+			productReference = 1ED78F6F702359A3202A30C2 /* Acalum.app */;
+			productType = "com.apple.product-type.application";
+		};
+		83C7059F4565E1C2994CCFC5 /* AcalumTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = A60B5A0865780BB1150E130C /* Build configuration list for PBXNativeTarget "AcalumTests" */;
+			buildPhases = (
+				20F402F19F1EF5185ED81345 /* Sources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				A447412EA232F937B8178FBC /* PBXTargetDependency */,
+			);
+			name = AcalumTests;
+			packageProductDependencies = (
+			);
+			productName = AcalumTests;
+			productReference = 8DD89E74000386B14B4782D0 /* AcalumTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		0A0202A05872C92BDE59C507 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = YES;
+				LastUpgradeCheck = 1600;
+				TargetAttributes = {
+				};
+			};
+			buildConfigurationList = 182F017D08FBD6854E1225DE /* Build configuration list for PBXProject "Acalum" */;
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				Base,
+				en,
+			);
+			mainGroup = 726A59F68EFAC5483FB8BE80;
+			minimizedProjectReferenceProxies = 1;
+			preferredProjectObjectVersion = 77;
+			productRefGroup = C214B6F19284A6F637028ED0 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				0F07DD1B4D05E0994E14D192 /* Acalum */,
+				83C7059F4565E1C2994CCFC5 /* AcalumTests */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		67DDDF08E890F8165AEE18B5 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				1A7C5ADE158467C56C0B505B /* Assets.xcassets in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		20F402F19F1EF5185ED81345 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				394C2C2CB43E85365C55057D /* FeedbackTrackerTests.swift in Sources */,
+				1C903392C438B3164F81BF55 /* LocalStoreTests.swift in Sources */,
+				0B47806ED321AC50C081F2A3 /* PillTests.swift in Sources */,
+				C4D3FA97871A4A42B91AE4BD /* PlaybackQueueTests.swift in Sources */,
+				56CAD191298C1BCAB7408D68 /* TrackTests.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		7F928C84F1A2CA657C175890 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				C5F630C9DB016A86F980F79D /* APIClient.swift in Sources */,
+				7850FD31140F74269CD86047 /* AcalumApp.swift in Sources */,
+				ED7B2F8AAFF4514F89E50180 /* AmbientArtworkView.swift in Sources */,
+				36F18D95A3439F94B150F8E2 /* AudioPlayerService.swift in Sources */,
+				CD654C2622FDFB9A281F6224 /* DTOs.swift in Sources */,
+				D2E8C915254BD92E01915DA1 /* DiscoveryContext.swift in Sources */,
+				DAE1C94F5B23A1BDDF8D36AC /* FeedbackEvent.swift in Sources */,
+				1DA49190CC5EF5AAB1DEC349 /* FeedbackEventStore.swift in Sources */,
+				1DC4F96569B0EB26F33AD238 /* FeedbackTracker.swift in Sources */,
+				9EB0B4428701F6A3D6D1ACF1 /* LocalStore.swift in Sources */,
+				9D310DDBD98BC0B4EE6F9BD0 /* MockData.swift in Sources */,
+				6DE88BE834CFEF7D9CEA6B85 /* MockQueueService.swift in Sources */,
+				2897AFEFFC20F481BB391BB3 /* NowPlayingCardView.swift in Sources */,
+				D6B4902AC98AA1182D3F9197 /* Pill.swift in Sources */,
+				256428C30EC0621122FECAF8 /* PillSelectorView.swift in Sources */,
+				AE816792FBBB1AC1D5564374 /* PlaybackControlsView.swift in Sources */,
+				0EE5DE9BEED9A182A8D9C56D /* PlaybackQueue.swift in Sources */,
+				BD2DBF48DCAD509E26DE55EF /* PlaybackState.swift in Sources */,
+				AA6C4E28107D2F6DA3F9ED5E /* PlayerHomeView.swift in Sources */,
+				13BF422DA149F30719A7E3E6 /* PlayerViewModel.swift in Sources */,
+				26C9D74F6978B285E4D89178 /* PromptBarView.swift in Sources */,
+				75D049F4E6C54AD380A7FBC0 /* SessionStore.swift in Sources */,
+				80D258048994F5DFE9AFF851 /* SettingsSheet.swift in Sources */,
+				E8E4C9C14F833A00DFA4CBF5 /* Spacing.swift in Sources */,
+				A5E193A644DE2C0E7CB0FF70 /* Track.swift in Sources */,
+				54E3A6D78077DBC80A03ED50 /* TrackInfoSheet.swift in Sources */,
+				B5A9749D0DEABA2B0C8FE2A4 /* Typography.swift in Sources */,
+				DD6F89E6516B7BC4E7CD2740 /* WhyThisSheet.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		A447412EA232F937B8178FBC /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 0F07DD1B4D05E0994E14D192 /* Acalum */;
+			targetProxy = 4A62384A5248230CA6549A05 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
+/* Begin XCBuildConfiguration section */
+		4613502F0B6021B28D82DF58 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				GENERATE_INFOPLIST_FILE = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.parso.acalum.AcalumTests;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Acalum.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Acalum";
+			};
+			name = Release;
+		};
+		5B6359BBAF79C473D2AB372A /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				CURRENT_PROJECT_VERSION = 1;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				MARKETING_VERSION = 0.1.0;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				SWIFT_STRICT_CONCURRENCY = targeted;
+				SWIFT_VERSION = 5;
+			};
+			name = Release;
+		};
+		87125299D82AC739390B7AD7 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				GENERATE_INFOPLIST_FILE = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.parso.acalum.AcalumTests;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Acalum.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Acalum";
+			};
+			name = Debug;
+		};
+		92173216943ED4EDF246DBAF /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGNING_ALLOWED = NO;
+				CODE_SIGNING_REQUIRED = NO;
+				CODE_SIGN_IDENTITY = "";
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = Acalum;
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UIBackgroundModes = audio;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = UIInterfaceOrientationPortrait;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.parso.acalum.Acalum;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+		B9AAF6820396D13AFAF4DA10 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGNING_ALLOWED = NO;
+				CODE_SIGNING_REQUIRED = NO;
+				CODE_SIGN_IDENTITY = "";
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = Acalum;
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UIBackgroundModes = audio;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = UIInterfaceOrientationPortrait;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.parso.acalum.Acalum;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		C0935E450466A9920217C081 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				CURRENT_PROJECT_VERSION = 1;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"$(inherited)",
+					"DEBUG=1",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				MARKETING_VERSION = 0.1.0;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_STRICT_CONCURRENCY = targeted;
+				SWIFT_VERSION = 5;
+			};
+			name = Debug;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		182F017D08FBD6854E1225DE /* Build configuration list for PBXProject "Acalum" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				C0935E450466A9920217C081 /* Debug */,
+				5B6359BBAF79C473D2AB372A /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		1ACDC20EBB06A8C10D4F1259 /* Build configuration list for PBXNativeTarget "Acalum" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				B9AAF6820396D13AFAF4DA10 /* Debug */,
+				92173216943ED4EDF246DBAF /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		A60B5A0865780BB1150E130C /* Build configuration list for PBXNativeTarget "AcalumTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				87125299D82AC739390B7AD7 /* Debug */,
+				4613502F0B6021B28D82DF58 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = 0A0202A05872C92BDE59C507 /* Project object */;
+}

@@ -1,0 +1,36 @@
+# Xcode
+build/
+DerivedData/
+*.xcworkspace
+!*.xcodeproj/project.pbxproj
+*.xcuserdata
+xcuserdata/
+*.xcscmblueprint
+*.xccheckout
+
+# Swift Package Manager
+.build/
+Packages/
+Package.pins
+Package.resolved
+
+# CocoaPods
+Pods/
+
+# Carthage
+Carthage/Build/
+
+# OS
+.DS_Store
+*.swp
+*~
+._*
+
+# Fastlane
+fastlane/report.xml
+fastlane/Preview.html
+fastlane/screenshots/**/*.png
+fastlane/test_output
+
+# Result bundles
+*.xcresult
