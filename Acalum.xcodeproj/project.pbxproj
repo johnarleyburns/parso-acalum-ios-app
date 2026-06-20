@@ -79,7 +79,7 @@
 		126D19C5FE06465C5C34F865 /* FeedbackEvent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FeedbackEvent.swift; sourceTree = "<group>"; };
 		19AFB3CA54AD28FA2DF71CC9 /* SearchResult.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SearchResult.swift; sourceTree = "<group>"; };
 		1D77F939C1D2B5CC27A0F5A9 /* FeedbackTracker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FeedbackTracker.swift; sourceTree = "<group>"; };
-		1ED78F6F702359A3202A30C2 /* Acalum.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Acalum.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		1ED78F6F702359A3202A30C2 /* Acalum.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = Acalum.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		24D96649DF1C25E5ADB62E48 /* DTOs.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DTOs.swift; sourceTree = "<group>"; };
 		28C1AA2A62AACFE0800F0115 /* QueryTextBuilderTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QueryTextBuilderTests.swift; sourceTree = "<group>"; };
 		29C72C504761D4C1D877669B /* MockQueueService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MockQueueService.swift; sourceTree = "<group>"; };
@@ -97,7 +97,7 @@
 		6D9B8F0A6308250C2A6A57F2 /* PlaybackQueue.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlaybackQueue.swift; sourceTree = "<group>"; };
 		7005719932AA9C9B693614D1 /* Pill.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Pill.swift; sourceTree = "<group>"; };
 		712F08F424D91F0DE17E00FE /* ExactCosineVectorSearchTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExactCosineVectorSearchTests.swift; sourceTree = "<group>"; };
-		75A4A69F3514BF4A268E45BC /* parso_indexer.db */ = {isa = PBXFileReference; lastKnownFileType = file; path = parso_indexer.db; sourceTree = "<group>"; };
+		75A4A69F3514BF4A268E45BC /* parso_indexer.db */ = {isa = PBXFileReference; path = parso_indexer.db; sourceTree = "<group>"; };
 		77AF958CB530D1250F091802 /* QueryTextBuilder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QueryTextBuilder.swift; sourceTree = "<group>"; };
 		7D658648CA955E74430D3ADD /* SessionStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionStore.swift; sourceTree = "<group>"; };
 		7D6684AE09710AEF54496BA2 /* LocalStoreTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocalStoreTests.swift; sourceTree = "<group>"; };
@@ -597,13 +597,13 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				CODE_SIGN_STYLE = Automatic;
-				DEVELOPMENT_TEAM = 3264Y8YUGV;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_CFBundleDisplayName = Acalum;
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UIBackgroundModes = audio;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = UIInterfaceOrientationPortrait;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -621,13 +621,13 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				CODE_SIGN_STYLE = Automatic;
-				DEVELOPMENT_TEAM = 3264Y8YUGV;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_CFBundleDisplayName = Acalum;
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UIBackgroundModes = audio;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = UIInterfaceOrientationPortrait;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
