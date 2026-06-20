@@ -34,3 +34,6 @@ fastlane/test_output
 
 # Result bundles
 *.xcresult
+
+# Large database files (copied from parso-ia-music-indexer at build time)
+Acalum/Resources/*.db

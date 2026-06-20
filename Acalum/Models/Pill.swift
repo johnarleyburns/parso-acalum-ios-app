@@ -12,4 +12,14 @@ struct Pill: Identifiable, Codable, Hashable {
     let id: String
     let label: String
     let category: PillCategory
+    let semanticPhrase: String
+
+    init(id: String, label: String, category: PillCategory, semanticPhrase: String = "") {
+        self.id = id
+        self.label = label
+        self.category = category
+        self.semanticPhrase = semanticPhrase
+    }
 }
+
+typealias DiscoveryPill = Pill
