@@ -9,6 +9,7 @@ struct Track: Identifiable, Codable, Equatable {
     let sourceURL: URL?
     let audioURL: URL
     let durationSeconds: Double
+    let artworkURL: URL?
     let license: String?
     let year: Int?
     let explanation: TrackExplanation?

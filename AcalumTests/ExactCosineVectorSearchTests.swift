@@ -14,7 +14,8 @@ final class ExactCosineVectorSearchTests: XCTestCase {
             tags: nil,
             durationSeconds: 180,
             sourceURL: nil,
-            audioURL: nil
+            audioURL: nil,
+            artURL: nil
         )
     }
 

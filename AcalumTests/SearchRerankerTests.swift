@@ -14,7 +14,8 @@ final class SearchRerankerTests: XCTestCase {
             tags: nil,
             durationSeconds: 180,
             sourceURL: nil,
-            audioURL: nil
+            audioURL: nil,
+            artURL: nil
         )
         return SearchResult(track: record, score: score, explanation: ["CLAP match"])
     }

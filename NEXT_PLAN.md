@@ -230,26 +230,48 @@ Download favorite tracks for offline playback. Generate queue from downloaded-on
 4. PlayerViewModel checks NetworkMonitor: if offline and no downloaded tracks, show message
 5. Art cache — downloaded art served from local files
 
-## Phase 2c: Local CLAP Text Encoder (deferred)
+## Phase 2c: Local CLAP Text Encoder
 
-### Goal
+### Status: IMPLEMENTED — awaiting model export
 
-Run CLAP text embedding on-device so prompts like "quiet Spanish guitar at dusk" produce real 512-dim vectors.
+### What was done (2026-06-20)
 
-### Prerequisites (from user)
+1. **Export script** — `parso-ia-music-indexer/python_sidecar/export_for_ios.py`
+   - Extracts text_model + text_projection from laion/clap-htsat-fused
+   - Exports Core ML .mlpackage (requires Python 3.12 for coremltools)
+   - Exports vocab.json, merges.txt, tokenizer_config.json
+   - Generates test_vectors.json for validation
 
-- User will provide details on how to export AcalumCLAPTextEncoder.mlpackage
-- Must match laion/clap-htsat-fused exactly
-- Must use same tokenizer as parso-ia-music-indexer Python sidecar
+2. **CLAPTokenizer.swift** — GPT-2 byte-level BPE tokenizer in pure Swift
+   - byte_encoder: bijective mapping from UInt8 → Unicode scalar
+   - Pre-tokenizer: GPT-2 regex pattern
+   - BPE merge algorithm with ranked merge rules
+   - Pads/truncates to max_length=77
 
-### Steps (when details arrive)
+3. **CLAPTextEmbeddingService.swift** — Core ML inference
+   - Loads AcalumCLAPTextEncoder.mlpackage
+   - Tokenize → MLMultiArray → prediction → L2 normalize → Embedding512
 
-1. Export Core ML model from laion/clap-htsat-fused (text_model + text_projection)
-2. Export tokenizer vocabulary from same checkpoint
-3. Implement CLAPTokenizer.encode() — RoBERTa tokenization
-4. Implement CLAPTextEmbeddingService.embed() — tokenize → Core ML → L2 normalize
-5. Validate: cosine_similarity(iOS, Python) >= 0.995 for 10 test prompts
-6. Replace MockTextEmbeddingService with CLAPTextEmbeddingService in production
+4. **Wired into LocalRecommendationEngine**
+   - Prompt-based queries now use real CLAP text embeddings
+   - Falls back to taste vectors / pill seeds when no prompt
+   - AcalumApp creates CLAPTextEmbeddingService (nil if model not bundled)
+
+5. **Tests** — CLAPTokenizerTests (byte encoder, BPE, real file validation)
+   - CLAPTextEmbeddingServiceTests (dimension, normalization, Python match)
+   - Tests skip gracefully when model files absent
+   - 70 total tests (61 pass, 9 skip)
+
+### User action required
+
+Run with Python 3.12:
+```
+cd parso-ia-music-indexer
+pip install coremltools torch transformers
+python python_sidecar/export_for_ios.py --output-dir ../parso-acalum-ios-app/Acalum/Resources/
+```
+
+Then rebuild and run tests to validate cosine >= 0.995.
 
 ## Phases 4-5 (later)
 

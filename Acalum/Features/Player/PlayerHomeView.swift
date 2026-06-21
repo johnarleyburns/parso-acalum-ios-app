@@ -16,15 +16,23 @@ struct PlayerHomeView: View {
 
                 NowPlayingCardView(track: viewModel.currentTrack)
 
-                progressView
+                if viewModel.currentTrack == nil {
+                    emptyStateView
+                } else {
+                    progressView
 
-                PlaybackControlsView(
-                    isPlaying: viewModel.isPlaying,
-                    isFavorited: viewModel.isFavorited,
-                    onFavorite: viewModel.toggleFavorite,
-                    onPlayPause: viewModel.togglePlayPause,
-                    onSkip: viewModel.skip
-                )
+                    PlaybackControlsView(
+                        isPlaying: viewModel.isPlaying,
+                        isFavorited: viewModel.isFavorited,
+                        onFavorite: viewModel.toggleFavorite,
+                        onPlayPause: viewModel.togglePlayPause,
+                        onSkip: viewModel.skip
+                    )
+                }
+
+                if case .failed(let message) = viewModel.playbackState {
+                    errorBanner(message: message)
+                }
 
                 PillSelectorView(
                     pills: MockData.pills,
@@ -44,6 +52,11 @@ struct PlayerHomeView: View {
             .padding(.top, AcalumSpacing.sm)
         }
         .background(Color(.systemBackground))
+        .overlay {
+            if case .loading = viewModel.playbackState {
+                loadingOverlay
+            }
+        }
         .sheet(item: $viewModel.activeSheet) { sheet in
             switch sheet {
             case .whyThis:
@@ -54,6 +67,49 @@ struct PlayerHomeView: View {
                 SettingsSheet()
             }
         }
+    }
+
+    private var emptyStateView: some View {
+        VStack(spacing: AcalumSpacing.md) {
+            Text("Choose your sound")
+                .font(AcalumTypography.headline)
+                .foregroundStyle(.secondary)
+            Text("Select some pills or type a prompt to discover public-domain music")
+                .font(AcalumTypography.body)
+                .foregroundStyle(.tertiary)
+                .multilineTextAlignment(.center)
+        }
+        .padding(.horizontal, AcalumSpacing.xl)
+        .padding(.vertical, AcalumSpacing.lg)
+    }
+
+    private func errorBanner(message: String) -> some View {
+        Label(message, systemImage: "exclamationmark.triangle.fill")
+            .font(AcalumTypography.caption)
+            .foregroundStyle(.red)
+            .padding(.horizontal, AcalumSpacing.md)
+            .padding(.vertical, AcalumSpacing.sm)
+            .background(
+                RoundedRectangle(cornerRadius: 10)
+                    .fill(.red.opacity(0.1))
+            )
+            .padding(.horizontal, AcalumSpacing.md)
+            .accessibilityLabel("Playback error: \(message)")
+    }
+
+    private var loadingOverlay: some View {
+        Color(.systemBackground)
+            .opacity(0.6)
+            .ignoresSafeArea()
+            .overlay {
+                VStack(spacing: AcalumSpacing.md) {
+                    ProgressView()
+                        .scaleEffect(1.2)
+                    Text("Loading...")
+                        .font(AcalumTypography.body)
+                        .foregroundStyle(.secondary)
+                }
+            }
     }
 
     private var headerView: some View {

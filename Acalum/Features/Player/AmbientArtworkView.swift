@@ -22,6 +22,45 @@ struct AmbientArtworkView: View {
     }
 
     var body: some View {
+        Group {
+            if let artworkURL = track?.artworkURL {
+                AsyncImage(url: artworkURL) { phase in
+                    switch phase {
+                    case .success(let image):
+                        image
+                            .resizable()
+                            .aspectRatio(contentMode: .fill)
+                    case .failure, .empty:
+                        gradientView
+                    @unknown default:
+                        gradientView
+                    }
+                }
+            } else {
+                gradientView
+            }
+        }
+        .clipShape(RoundedRectangle(cornerRadius: 20))
+        .overlay(
+            RoundedRectangle(cornerRadius: 20)
+                .fill(.ultraThinMaterial)
+                .opacity(0.3)
+        )
+        .aspectRatio(1.0, contentMode: .fit)
+        .onAppear {
+            if isPlaying {
+                startAnimation()
+            }
+        }
+        .onChange(of: isPlaying) { _, playing in
+            if playing {
+                startAnimation()
+            }
+        }
+        .accessibilityLabel("Album artwork")
+    }
+
+    private var gradientView: some View {
         RoundedRectangle(cornerRadius: 20)
             .fill(
                 LinearGradient(
@@ -30,23 +69,6 @@ struct AmbientArtworkView: View {
                     endPoint: UnitPoint(x: 0.5 + 0.3 * sin(animationPhase), y: 1)
                 )
             )
-            .overlay(
-                RoundedRectangle(cornerRadius: 20)
-                    .fill(.ultraThinMaterial)
-                    .opacity(0.3)
-            )
-            .aspectRatio(1.0, contentMode: .fit)
-            .onAppear {
-                if isPlaying {
-                    startAnimation()
-                }
-            }
-            .onChange(of: isPlaying) { _, playing in
-                if playing {
-                    startAnimation()
-                }
-            }
-            .accessibilityLabel("Album artwork")
     }
 
     private func startAnimation() {

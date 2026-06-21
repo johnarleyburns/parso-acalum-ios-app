@@ -4,14 +4,14 @@ import XCTest
 final class FeedbackTrackerTests: XCTestCase {
     override func setUp() {
         super.setUp()
-        FeedbackEventStore.saveUnsentEvents([])
+        FeedbackEventStore.clearAllPending()
     }
 
     func testLogCreatesEvent() {
         let tracker = FeedbackTracker(sessionID: "test-session")
         tracker.log(type: .favorited, trackID: "track_001")
 
-        let events = FeedbackEventStore.loadUnsentEvents()
+        let events = FeedbackEventStore.loadPendingEvents()
         XCTAssertEqual(events.count, 1)
         XCTAssertEqual(events.first?.type, .favorited)
         XCTAssertEqual(events.first?.trackID, "track_001")
@@ -24,7 +24,7 @@ final class FeedbackTrackerTests: XCTestCase {
         tracker.log(type: .skipped, trackID: "track_001", listenSeconds: 12)
         tracker.log(type: .pillSelected, selectedPillIDs: ["instrument:guitar"])
 
-        let events = FeedbackEventStore.loadUnsentEvents()
+        let events = FeedbackEventStore.loadPendingEvents()
         XCTAssertEqual(events.count, 3)
     }
 }

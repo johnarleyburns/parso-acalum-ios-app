@@ -1,3 +1,4 @@
+import CoreML
 import Foundation
 
 enum CLAPTextEmbeddingError: Error, LocalizedError {
@@ -18,38 +19,64 @@ enum CLAPTextEmbeddingError: Error, LocalizedError {
 }
 
 final class CLAPTextEmbeddingService: TextEmbeddingService {
-    // TODO: Load AcalumCLAPTextEncoder.mlpackage via Core ML
-    // private var model: MLModel?
+    private let model: MLModel
+    private let tokenizer: CLAPTokenizer
 
-    // TODO: Load exported tokenizer from the same laion/clap-htsat-fused checkpoint
-    // private var tokenizer: CLAPTokenizer?
+    init() throws {
+        guard let modelURL = Bundle.main.url(
+            forResource: "AcalumCLAPTextEncoder",
+            withExtension: "mlmodelc"
+        ) else {
+            throw CLAPTextEmbeddingError.modelNotBundled
+        }
+        self.model = try MLModel(contentsOf: modelURL)
+        self.tokenizer = try CLAPTokenizer()
+    }
+
+    init(modelURL: URL, tokenizer: CLAPTokenizer = try! CLAPTokenizer()) throws {
+        self.model = try MLModel(contentsOf: modelURL)
+        self.tokenizer = tokenizer
+    }
 
     func embed(prompt: String, pills: [DiscoveryPill]) async throws -> Embedding512 {
-        // TODO: Full pipeline when Core ML model is available:
-        //
-        // 1. Build query text
-        //    let queryText = QueryTextBuilder.buildQuery(prompt: prompt, pills: pills)
-        //
-        // 2. Tokenize
-        //    let tokens = try tokenizer.encode(queryText)
-        //    // tokens.inputIDs: [Int]
-        //    // tokens.attentionMask: [Int]
-        //
-        // 3. Create Core ML input
-        //    let input = AcalumCLAPTextEncoderInput(
-        //        input_ids: MLMultiArray(tokens.inputIDs),
-        //        attention_mask: MLMultiArray(tokens.attentionMask)
-        //    )
-        //
-        // 4. Run prediction
-        //    let output = try model.prediction(from: input)
-        //
-        // 5. Extract 512-dim vector from output
-        //    let rawVector = output.featureValue(for: "text_embedding")
-        //
-        // 6. L2 normalize
-        //    return try Embedding512(values: rawFloats).normalized()
+        let queryText = QueryTextBuilder.buildQuery(prompt: prompt, pills: pills)
 
-        throw CLAPTextEmbeddingError.modelNotBundled
+        let maxLength = 77
+        let tokenOutput = try tokenizer.encode(queryText, maxLength: maxLength)
+
+        let inputIDs = try MLMultiArray(
+            shape: [1, NSNumber(value: maxLength)],
+            dataType: .int32
+        )
+        let attentionMask = try MLMultiArray(
+            shape: [1, NSNumber(value: maxLength)],
+            dataType: .float32
+        )
+
+        for i in 0..<tokenOutput.inputIDs.count {
+            inputIDs[[0, NSNumber(value: i)] as [NSNumber]] = NSNumber(value: tokenOutput.inputIDs[i])
+            attentionMask[[0, NSNumber(value: i)] as [NSNumber]] = NSNumber(value: Float(tokenOutput.attentionMask[i]))
+        }
+
+        guard let inputFeatures = try? MLDictionaryFeatureProvider(dictionary: [
+            "input_ids": inputIDs,
+            "attention_mask": attentionMask,
+        ]) else {
+            throw CLAPTextEmbeddingError.predictionFailed("Failed to create input features")
+        }
+
+        let prediction = try await model.prediction(from: inputFeatures)
+
+        guard let outputMLArray = prediction.featureValue(for: "text_embedding")?.multiArrayValue else {
+            throw CLAPTextEmbeddingError.predictionFailed("Missing text_embedding output")
+        }
+
+        let dim = Embedding512.dimension
+        var values = [Float](repeating: 0, count: dim)
+        for i in 0..<min(dim, outputMLArray.count) {
+            values[i] = Float(truncating: outputMLArray[[0, NSNumber(value: i)] as [NSNumber]])
+        }
+
+        return try Embedding512(values: values).normalized()
     }
 }

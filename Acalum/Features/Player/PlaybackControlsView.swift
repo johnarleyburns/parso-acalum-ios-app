@@ -9,21 +9,30 @@ struct PlaybackControlsView: View {
 
     var body: some View {
         HStack(spacing: AcalumSpacing.xxl) {
-            Button(action: onFavorite) {
+            Button {
+                HapticFeedback.medium()
+                onFavorite()
+            } label: {
                 Image(systemName: isFavorited ? "heart.fill" : "heart")
                     .font(.title2)
                     .foregroundStyle(isFavorited ? .red : .primary)
             }
             .accessibilityLabel(isFavorited ? "Unfavorite" : "Favorite")
 
-            Button(action: onPlayPause) {
+            Button {
+                HapticFeedback.light()
+                onPlayPause()
+            } label: {
                 Image(systemName: isPlaying ? "pause.circle.fill" : "play.circle.fill")
                     .font(.system(size: 56))
                     .foregroundStyle(.primary)
             }
             .accessibilityLabel(isPlaying ? "Pause" : "Play")
 
-            Button(action: onSkip) {
+            Button {
+                HapticFeedback.medium()
+                onSkip()
+            } label: {
                 Image(systemName: "forward.fill")
                     .font(.title2)
                     .foregroundStyle(.primary)

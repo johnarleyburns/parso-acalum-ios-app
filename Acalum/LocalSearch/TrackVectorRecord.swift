@@ -10,4 +10,5 @@ struct TrackVectorRecord: Identifiable, Equatable {
     let durationSeconds: Double?
     let sourceURL: URL?
     let audioURL: URL?
+    let artURL: URL?
 }

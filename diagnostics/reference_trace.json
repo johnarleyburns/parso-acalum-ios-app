@@ -1,0 +1,1390 @@
+{
+  "quiet Spanish guitar at dusk": {
+    "pretokens": [
+      "quiet",
+      " Spanish",
+      " guitar",
+      " at",
+      " dusk"
+    ],
+    "details": [
+      {
+        "pretoken": "quiet",
+        "utf8_bytes": [
+          113,
+          117,
+          105,
+          101,
+          116
+        ],
+        "byte_symbols": [
+          "q",
+          "u",
+          "i",
+          "e",
+          "t"
+        ],
+        "bpe_result": [
+          "quiet"
+        ]
+      },
+      {
+        "pretoken": " Spanish",
+        "utf8_bytes": [
+          32,
+          83,
+          112,
+          97,
+          110,
+          105,
+          115,
+          104
+        ],
+        "byte_symbols": [
+          "Ġ",
+          "S",
+          "p",
+          "a",
+          "n",
+          "i",
+          "s",
+          "h"
+        ],
+        "bpe_result": [
+          "ĠSpanish"
+        ]
+      },
+      {
+        "pretoken": " guitar",
+        "utf8_bytes": [
+          32,
+          103,
+          117,
+          105,
+          116,
+          97,
+          114
+        ],
+        "byte_symbols": [
+          "Ġ",
+          "g",
+          "u",
+          "i",
+          "t",
+          "a",
+          "r"
+        ],
+        "bpe_result": [
+          "Ġguitar"
+        ]
+      },
+      {
+        "pretoken": " at",
+        "utf8_bytes": [
+          32,
+          97,
+          116
+        ],
+        "byte_symbols": [
+          "Ġ",
+          "a",
+          "t"
+        ],
+        "bpe_result": [
+          "Ġat"
+        ]
+      },
+      {
+        "pretoken": " dusk",
+        "utf8_bytes": [
+          32,
+          100,
+          117,
+          115,
+          107
+        ],
+        "byte_symbols": [
+          "Ġ",
+          "d",
+          "u",
+          "s",
+          "k"
+        ],
+        "bpe_result": [
+          "Ġdusk"
+        ]
+      }
+    ],
+    "all_bpe_tokens": [
+      "quiet",
+      "ĠSpanish",
+      "Ġguitar",
+      "Ġat",
+      "Ġdusk"
+    ],
+    "token_ids": [
+      0,
+      35750,
+      3453,
+      8669,
+      23,
+      33917,
+      2
+    ]
+  },
+  "melancholy piano for reading": {
+    "pretokens": [
+      "melancholy",
+      " piano",
+      " for",
+      " reading"
+    ],
+    "details": [
+      {
+        "pretoken": "melancholy",
+        "utf8_bytes": [
+          109,
+          101,
+          108,
+          97,
+          110,
+          99,
+          104,
+          111,
+          108,
+          121
+        ],
+        "byte_symbols": [
+          "m",
+          "e",
+          "l",
+          "a",
+          "n",
+          "c",
+          "h",
+          "o",
+          "l",
+          "y"
+        ],
+        "bpe_result": [
+          "mel",
+          "anch",
+          "oly"
+        ]
+      },
+      {
+        "pretoken": " piano",
+        "utf8_bytes": [
+          32,
+          112,
+          105,
+          97,
+          110,
+          111
+        ],
+        "byte_symbols": [
+          "Ġ",
+          "p",
+          "i",
+          "a",
+          "n",
+          "o"
+        ],
+        "bpe_result": [
+          "Ġpiano"
+        ]
+      },
+      {
+        "pretoken": " for",
+        "utf8_bytes": [
+          32,
+          102,
+          111,
+          114
+        ],
+        "byte_symbols": [
+          "Ġ",
+          "f",
+          "o",
+          "r"
+        ],
+        "bpe_result": [
+          "Ġfor"
+        ]
+      },
+      {
+        "pretoken": " reading",
+        "utf8_bytes": [
+          32,
+          114,
+          101,
+          97,
+          100,
+          105,
+          110,
+          103
+        ],
+        "byte_symbols": [
+          "Ġ",
+          "r",
+          "e",
+          "a",
+          "d",
+          "i",
+          "n",
+          "g"
+        ],
+        "bpe_result": [
+          "Ġreading"
+        ]
+      }
+    ],
+    "all_bpe_tokens": [
+      "mel",
+      "anch",
+      "oly",
+      "Ġpiano",
+      "Ġfor",
+      "Ġreading"
+    ],
+    "token_ids": [
+      0,
+      17170,
+      10459,
+      15022,
+      13305,
+      13,
+      2600,
+      2
+    ]
+  },
+  "Gregorian chant in an old cathedral": {
+    "pretokens": [
+      "Gregorian",
+      " chant",
+      " in",
+      " an",
+      " old",
+      " cathedral"
+    ],
+    "details": [
+      {
+        "pretoken": "Gregorian",
+        "utf8_bytes": [
+          71,
+          114,
+          101,
+          103,
+          111,
+          114,
+          105,
+          97,
+          110
+        ],
+        "byte_symbols": [
+          "G",
+          "r",
+          "e",
+          "g",
+          "o",
+          "r",
+          "i",
+          "a",
+          "n"
+        ],
+        "bpe_result": [
+          "Greg",
+          "orian"
+        ]
+      },
+      {
+        "pretoken": " chant",
+        "utf8_bytes": [
+          32,
+          99,
+          104,
+          97,
+          110,
+          116
+        ],
+        "byte_symbols": [
+          "Ġ",
+          "c",
+          "h",
+          "a",
+          "n",
+          "t"
+        ],
+        "bpe_result": [
+          "Ġchant"
+        ]
+      },
+      {
+        "pretoken": " in",
+        "utf8_bytes": [
+          32,
+          105,
+          110
+        ],
+        "byte_symbols": [
+          "Ġ",
+          "i",
+          "n"
+        ],
+        "bpe_result": [
+          "Ġin"
+        ]
+      },
+      {
+        "pretoken": " an",
+        "utf8_bytes": [
+          32,
+          97,
+          110
+        ],
+        "byte_symbols": [
+          "Ġ",
+          "a",
+          "n"
+        ],
+        "bpe_result": [
+          "Ġan"
+        ]
+      },
+      {
+        "pretoken": " old",
+        "utf8_bytes": [
+          32,
+          111,
+          108,
+          100
+        ],
+        "byte_symbols": [
+          "Ġ",
+          "o",
+          "l",
+          "d"
+        ],
+        "bpe_result": [
+          "Ġold"
+        ]
+      },
+      {
+        "pretoken": " cathedral",
+        "utf8_bytes": [
+          32,
+          99,
+          97,
+          116,
+          104,
+          101,
+          100,
+          114,
+          97,
+          108
+        ],
+        "byte_symbols": [
+          "Ġ",
+          "c",
+          "a",
+          "t",
+          "h",
+          "e",
+          "d",
+          "r",
+          "a",
+          "l"
+        ],
+        "bpe_result": [
+          "Ġcathedral"
+        ]
+      }
+    ],
+    "all_bpe_tokens": [
+      "Greg",
+      "orian",
+      "Ġchant",
+      "Ġin",
+      "Ġan",
+      "Ġold",
+      "Ġcathedral"
+    ],
+    "token_ids": [
+      0,
+      25302,
+      23943,
+      26662,
+      11,
+      41,
+      793,
+      28457,
+      2
+    ]
+  },
+  "early jazz from the 1920s": {
+    "pretokens": [
+      "early",
+      " jazz",
+      " from",
+      " the",
+      " 1920",
+      "s"
+    ],
+    "details": [
+      {
+        "pretoken": "early",
+        "utf8_bytes": [
+          101,
+          97,
+          114,
+          108,
+          121
+        ],
+        "byte_symbols": [
+          "e",
+          "a",
+          "r",
+          "l",
+          "y"
+        ],
+        "bpe_result": [
+          "early"
+        ]
+      },
+      {
+        "pretoken": " jazz",
+        "utf8_bytes": [
+          32,
+          106,
+          97,
+          122,
+          122
+        ],
+        "byte_symbols": [
+          "Ġ",
+          "j",
+          "a",
+          "z",
+          "z"
+        ],
+        "bpe_result": [
+          "Ġjazz"
+        ]
+      },
+      {
+        "pretoken": " from",
+        "utf8_bytes": [
+          32,
+          102,
+          114,
+          111,
+          109
+        ],
+        "byte_symbols": [
+          "Ġ",
+          "f",
+          "r",
+          "o",
+          "m"
+        ],
+        "bpe_result": [
+          "Ġfrom"
+        ]
+      },
+      {
+        "pretoken": " the",
+        "utf8_bytes": [
+          32,
+          116,
+          104,
+          101
+        ],
+        "byte_symbols": [
+          "Ġ",
+          "t",
+          "h",
+          "e"
+        ],
+        "bpe_result": [
+          "Ġthe"
+        ]
+      },
+      {
+        "pretoken": " 1920",
+        "utf8_bytes": [
+          32,
+          49,
+          57,
+          50,
+          48
+        ],
+        "byte_symbols": [
+          "Ġ",
+          "1",
+          "9",
+          "2",
+          "0"
+        ],
+        "bpe_result": [
+          "Ġ1920"
+        ]
+      },
+      {
+        "pretoken": "s",
+        "utf8_bytes": [
+          115
+        ],
+        "byte_symbols": [
+          "s"
+        ],
+        "bpe_result": [
+          "s"
+        ]
+      }
+    ],
+    "all_bpe_tokens": [
+      "early",
+      "Ġjazz",
+      "Ġfrom",
+      "Ġthe",
+      "Ġ1920",
+      "s"
+    ],
+    "token_ids": [
+      0,
+      23099,
+      11057,
+      31,
+      5,
+      18283,
+      29,
+      2
+    ]
+  },
+  "romantic classical guitar": {
+    "pretokens": [
+      "romantic",
+      " classical",
+      " guitar"
+    ],
+    "details": [
+      {
+        "pretoken": "romantic",
+        "utf8_bytes": [
+          114,
+          111,
+          109,
+          97,
+          110,
+          116,
+          105,
+          99
+        ],
+        "byte_symbols": [
+          "r",
+          "o",
+          "m",
+          "a",
+          "n",
+          "t",
+          "i",
+          "c"
+        ],
+        "bpe_result": [
+          "rom",
+          "antic"
+        ]
+      },
+      {
+        "pretoken": " classical",
+        "utf8_bytes": [
+          32,
+          99,
+          108,
+          97,
+          115,
+          115,
+          105,
+          99,
+          97,
+          108
+        ],
+        "byte_symbols": [
+          "Ġ",
+          "c",
+          "l",
+          "a",
+          "s",
+          "s",
+          "i",
+          "c",
+          "a",
+          "l"
+        ],
+        "bpe_result": [
+          "Ġclassical"
+        ]
+      },
+      {
+        "pretoken": " guitar",
+        "utf8_bytes": [
+          32,
+          103,
+          117,
+          105,
+          116,
+          97,
+          114
+        ],
+        "byte_symbols": [
+          "Ġ",
+          "g",
+          "u",
+          "i",
+          "t",
+          "a",
+          "r"
+        ],
+        "bpe_result": [
+          "Ġguitar"
+        ]
+      }
+    ],
+    "all_bpe_tokens": [
+      "rom",
+      "antic",
+      "Ġclassical",
+      "Ġguitar"
+    ],
+    "token_ids": [
+      0,
+      5638,
+      26970,
+      15855,
+      8669,
+      2
+    ]
+  },
+  "soft public domain music for sleep": {
+    "pretokens": [
+      "soft",
+      " public",
+      " domain",
+      " music",
+      " for",
+      " sleep"
+    ],
+    "details": [
+      {
+        "pretoken": "soft",
+        "utf8_bytes": [
+          115,
+          111,
+          102,
+          116
+        ],
+        "byte_symbols": [
+          "s",
+          "o",
+          "f",
+          "t"
+        ],
+        "bpe_result": [
+          "soft"
+        ]
+      },
+      {
+        "pretoken": " public",
+        "utf8_bytes": [
+          32,
+          112,
+          117,
+          98,
+          108,
+          105,
+          99
+        ],
+        "byte_symbols": [
+          "Ġ",
+          "p",
+          "u",
+          "b",
+          "l",
+          "i",
+          "c"
+        ],
+        "bpe_result": [
+          "Ġpublic"
+        ]
+      },
+      {
+        "pretoken": " domain",
+        "utf8_bytes": [
+          32,
+          100,
+          111,
+          109,
+          97,
+          105,
+          110
+        ],
+        "byte_symbols": [
+          "Ġ",
+          "d",
+          "o",
+          "m",
+          "a",
+          "i",
+          "n"
+        ],
+        "bpe_result": [
+          "Ġdomain"
+        ]
+      },
+      {
+        "pretoken": " music",
+        "utf8_bytes": [
+          32,
+          109,
+          117,
+          115,
+          105,
+          99
+        ],
+        "byte_symbols": [
+          "Ġ",
+          "m",
+          "u",
+          "s",
+          "i",
+          "c"
+        ],
+        "bpe_result": [
+          "Ġmusic"
+        ]
+      },
+      {
+        "pretoken": " for",
+        "utf8_bytes": [
+          32,
+          102,
+          111,
+          114
+        ],
+        "byte_symbols": [
+          "Ġ",
+          "f",
+          "o",
+          "r"
+        ],
+        "bpe_result": [
+          "Ġfor"
+        ]
+      },
+      {
+        "pretoken": " sleep",
+        "utf8_bytes": [
+          32,
+          115,
+          108,
+          101,
+          101,
+          112
+        ],
+        "byte_symbols": [
+          "Ġ",
+          "s",
+          "l",
+          "e",
+          "e",
+          "p"
+        ],
+        "bpe_result": [
+          "Ġsleep"
+        ]
+      }
+    ],
+    "all_bpe_tokens": [
+      "soft",
+      "Ġpublic",
+      "Ġdomain",
+      "Ġmusic",
+      "Ġfor",
+      "Ġsleep"
+    ],
+    "token_ids": [
+      0,
+      24810,
+      285,
+      11170,
+      930,
+      13,
+      3581,
+      2
+    ]
+  },
+  "baroque strings and harpsichord": {
+    "pretokens": [
+      "baroque",
+      " strings",
+      " and",
+      " harpsichord"
+    ],
+    "details": [
+      {
+        "pretoken": "baroque",
+        "utf8_bytes": [
+          98,
+          97,
+          114,
+          111,
+          113,
+          117,
+          101
+        ],
+        "byte_symbols": [
+          "b",
+          "a",
+          "r",
+          "o",
+          "q",
+          "u",
+          "e"
+        ],
+        "bpe_result": [
+          "bar",
+          "o",
+          "que"
+        ]
+      },
+      {
+        "pretoken": " strings",
+        "utf8_bytes": [
+          32,
+          115,
+          116,
+          114,
+          105,
+          110,
+          103,
+          115
+        ],
+        "byte_symbols": [
+          "Ġ",
+          "s",
+          "t",
+          "r",
+          "i",
+          "n",
+          "g",
+          "s"
+        ],
+        "bpe_result": [
+          "Ġstrings"
+        ]
+      },
+      {
+        "pretoken": " and",
+        "utf8_bytes": [
+          32,
+          97,
+          110,
+          100
+        ],
+        "byte_symbols": [
+          "Ġ",
+          "a",
+          "n",
+          "d"
+        ],
+        "bpe_result": [
+          "Ġand"
+        ]
+      },
+      {
+        "pretoken": " harpsichord",
+        "utf8_bytes": [
+          32,
+          104,
+          97,
+          114,
+          112,
+          115,
+          105,
+          99,
+          104,
+          111,
+          114,
+          100
+        ],
+        "byte_symbols": [
+          "Ġ",
+          "h",
+          "a",
+          "r",
+          "p",
+          "s",
+          "i",
+          "c",
+          "h",
+          "o",
+          "r",
+          "d"
+        ],
+        "bpe_result": [
+          "Ġhar",
+          "ps",
+          "ich",
+          "ord"
+        ]
+      }
+    ],
+    "all_bpe_tokens": [
+      "bar",
+      "o",
+      "que",
+      "Ġstrings",
+      "Ġand",
+      "Ġhar",
+      "ps",
+      "ich",
+      "ord"
+    ],
+    "token_ids": [
+      0,
+      4901,
+      139,
+      3407,
+      22052,
+      8,
+      12280,
+      3275,
+      1725,
+      3109,
+      2
+    ]
+  },
+  "nostalgic old recordings": {
+    "pretokens": [
+      "nostalgic",
+      " old",
+      " recordings"
+    ],
+    "details": [
+      {
+        "pretoken": "nostalgic",
+        "utf8_bytes": [
+          110,
+          111,
+          115,
+          116,
+          97,
+          108,
+          103,
+          105,
+          99
+        ],
+        "byte_symbols": [
+          "n",
+          "o",
+          "s",
+          "t",
+          "a",
+          "l",
+          "g",
+          "i",
+          "c"
+        ],
+        "bpe_result": [
+          "n",
+          "ost",
+          "alg",
+          "ic"
+        ]
+      },
+      {
+        "pretoken": " old",
+        "utf8_bytes": [
+          32,
+          111,
+          108,
+          100
+        ],
+        "byte_symbols": [
+          "Ġ",
+          "o",
+          "l",
+          "d"
+        ],
+        "bpe_result": [
+          "Ġold"
+        ]
+      },
+      {
+        "pretoken": " recordings",
+        "utf8_bytes": [
+          32,
+          114,
+          101,
+          99,
+          111,
+          114,
+          100,
+          105,
+          110,
+          103,
+          115
+        ],
+        "byte_symbols": [
+          "Ġ",
+          "r",
+          "e",
+          "c",
+          "o",
+          "r",
+          "d",
+          "i",
+          "n",
+          "g",
+          "s"
+        ],
+        "bpe_result": [
+          "Ġrecordings"
+        ]
+      }
+    ],
+    "all_bpe_tokens": [
+      "n",
+      "ost",
+      "alg",
+      "ic",
+      "Ġold",
+      "Ġrecordings"
+    ],
+    "token_ids": [
+      0,
+      282,
+      2603,
+      31316,
+      636,
+      793,
+      15308,
+      2
+    ]
+  },
+  "peaceful violin music": {
+    "pretokens": [
+      "peaceful",
+      " violin",
+      " music"
+    ],
+    "details": [
+      {
+        "pretoken": "peaceful",
+        "utf8_bytes": [
+          112,
+          101,
+          97,
+          99,
+          101,
+          102,
+          117,
+          108
+        ],
+        "byte_symbols": [
+          "p",
+          "e",
+          "a",
+          "c",
+          "e",
+          "f",
+          "u",
+          "l"
+        ],
+        "bpe_result": [
+          "peace",
+          "ful"
+        ]
+      },
+      {
+        "pretoken": " violin",
+        "utf8_bytes": [
+          32,
+          118,
+          105,
+          111,
+          108,
+          105,
+          110
+        ],
+        "byte_symbols": [
+          "Ġ",
+          "v",
+          "i",
+          "o",
+          "l",
+          "i",
+          "n"
+        ],
+        "bpe_result": [
+          "Ġviolin"
+        ]
+      },
+      {
+        "pretoken": " music",
+        "utf8_bytes": [
+          32,
+          109,
+          117,
+          115,
+          105,
+          99
+        ],
+        "byte_symbols": [
+          "Ġ",
+          "m",
+          "u",
+          "s",
+          "i",
+          "c"
+        ],
+        "bpe_result": [
+          "Ġmusic"
+        ]
+      }
+    ],
+    "all_bpe_tokens": [
+      "peace",
+      "ful",
+      "Ġviolin",
+      "Ġmusic"
+    ],
+    "token_ids": [
+      0,
+      30861,
+      2650,
+      24896,
+      930,
+      2
+    ]
+  },
+  "dramatic organ music": {
+    "pretokens": [
+      "dramatic",
+      " organ",
+      " music"
+    ],
+    "details": [
+      {
+        "pretoken": "dramatic",
+        "utf8_bytes": [
+          100,
+          114,
+          97,
+          109,
+          97,
+          116,
+          105,
+          99
+        ],
+        "byte_symbols": [
+          "d",
+          "r",
+          "a",
+          "m",
+          "a",
+          "t",
+          "i",
+          "c"
+        ],
+        "bpe_result": [
+          "d",
+          "ram",
+          "atic"
+        ]
+      },
+      {
+        "pretoken": " organ",
+        "utf8_bytes": [
+          32,
+          111,
+          114,
+          103,
+          97,
+          110
+        ],
+        "byte_symbols": [
+          "Ġ",
+          "o",
+          "r",
+          "g",
+          "a",
+          "n"
+        ],
+        "bpe_result": [
+          "Ġorgan"
+        ]
+      },
+      {
+        "pretoken": " music",
+        "utf8_bytes": [
+          32,
+          109,
+          117,
+          115,
+          105,
+          99
+        ],
+        "byte_symbols": [
+          "Ġ",
+          "m",
+          "u",
+          "s",
+          "i",
+          "c"
+        ],
+        "bpe_result": [
+          "Ġmusic"
+        ]
+      }
+    ],
+    "all_bpe_tokens": [
+      "d",
+      "ram",
+      "atic",
+      "Ġorgan",
+      "Ġmusic"
+    ],
+    "token_ids": [
+      0,
+      417,
+      4040,
+      5183,
+      6757,
+      930,
+      2
+    ]
+  },
+  "hi": {
+    "pretokens": [
+      "hi"
+    ],
+    "details": [
+      {
+        "pretoken": "hi",
+        "utf8_bytes": [
+          104,
+          105
+        ],
+        "byte_symbols": [
+          "h",
+          "i"
+        ],
+        "bpe_result": [
+          "hi"
+        ]
+      }
+    ],
+    "all_bpe_tokens": [
+      "hi"
+    ],
+    "token_ids": [
+      0,
+      3592,
+      2
+    ]
+  },
+  "test": {
+    "pretokens": [
+      "test"
+    ],
+    "details": [
+      {
+        "pretoken": "test",
+        "utf8_bytes": [
+          116,
+          101,
+          115,
+          116
+        ],
+        "byte_symbols": [
+          "t",
+          "e",
+          "s",
+          "t"
+        ],
+        "bpe_result": [
+          "test"
+        ]
+      }
+    ],
+    "all_bpe_tokens": [
+      "test"
+    ],
+    "token_ids": [
+      0,
+      21959,
+      2
+    ]
+  },
+  "hello world": {
+    "pretokens": [
+      "hello",
+      " world"
+    ],
+    "details": [
+      {
+        "pretoken": "hello",
+        "utf8_bytes": [
+          104,
+          101,
+          108,
+          108,
+          111
+        ],
+        "byte_symbols": [
+          "h",
+          "e",
+          "l",
+          "l",
+          "o"
+        ],
+        "bpe_result": [
+          "hello"
+        ]
+      },
+      {
+        "pretoken": " world",
+        "utf8_bytes": [
+          32,
+          119,
+          111,
+          114,
+          108,
+          100
+        ],
+        "byte_symbols": [
+          "Ġ",
+          "w",
+          "o",
+          "r",
+          "l",
+          "d"
+        ],
+        "bpe_result": [
+          "Ġworld"
+        ]
+      }
+    ],
+    "all_bpe_tokens": [
+      "hello",
+      "Ġworld"
+    ],
+    "token_ids": [
+      0,
+      42891,
+      232,
+      2
+    ]
+  }
+}

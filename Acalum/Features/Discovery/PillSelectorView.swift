@@ -39,7 +39,10 @@ struct PillButton: View {
     let onTap: () -> Void
 
     var body: some View {
-        Button(action: onTap) {
+        Button {
+            HapticFeedback.selection()
+            onTap()
+        } label: {
             Text(pill.label)
                 .font(AcalumTypography.pill)
                 .padding(.horizontal, 14)

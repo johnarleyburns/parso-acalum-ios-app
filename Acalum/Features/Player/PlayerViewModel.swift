@@ -46,7 +46,7 @@ final class PlayerViewModel: ObservableObject {
         self.audioService = audioService
         self.feedbackTracker = feedbackTracker
         self.queueService = queueService
-        self.queue = PlaybackQueue(tracks: MockData.tracks)
+        self.queue = PlaybackQueue()
         self.currentTrack = queue.current
         self.favoriteIDs = LocalStore.loadFavorites()
 
@@ -57,6 +57,7 @@ final class PlayerViewModel: ObservableObject {
         self.selectedPills = Set(MockData.pills.filter { savedPillIDs.contains($0.id) })
 
         bindAudio()
+        refreshQueue()
     }
 
     private func bindAudio() {
@@ -75,6 +76,22 @@ final class PlayerViewModel: ObservableObject {
         audioService.onTrackFinished = { [weak self] in
             self?.handleTrackFinished()
         }
+
+        audioService.onInterruptionBegan = { [weak self] in
+            self?.audioService.pause()
+        }
+
+        audioService.onInterruptionEnded = { [weak self] in
+            guard let self, let track = self.currentTrack else { return }
+            self.audioService.play(url: track.audioURL)
+        }
+
+        $currentTrack
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] track in
+                self?.audioService.updateNowPlaying(track: track)
+            }
+            .store(in: &cancellables)
     }
 
     func togglePlayPause() {
@@ -103,6 +120,9 @@ final class PlayerViewModel: ObservableObject {
             listenSeconds: currentTime,
             selectedPillIDs: selectedPills.map(\.id)
         )
+        if let skippedID = skippedTrackID {
+            TasteProfileStore.recordSkipped(skippedID, listenSeconds: currentTime)
+        }
 
         if let next = queue.skipToNext() {
             currentTrack = next
@@ -120,9 +140,11 @@ final class PlayerViewModel: ObservableObject {
         if favoriteIDs.contains(track.id) {
             favoriteIDs.remove(track.id)
             feedbackTracker.log(type: .unfavorited, trackID: track.id, selectedPillIDs: selectedPills.map(\.id))
+            TasteProfileStore.removeFavorite(track.id)
         } else {
             favoriteIDs.insert(track.id)
             feedbackTracker.log(type: .favorited, trackID: track.id, selectedPillIDs: selectedPills.map(\.id))
+            TasteProfileStore.recordFavorite(track.id)
         }
         LocalStore.saveFavorites(favoriteIDs)
     }
@@ -154,6 +176,9 @@ final class PlayerViewModel: ObservableObject {
             listenSeconds: duration,
             selectedPillIDs: selectedPills.map(\.id)
         )
+        if let completedID = currentTrack?.id {
+            TasteProfileStore.recordCompleted(completedID)
+        }
 
         if let next = queue.skipToNext() {
             currentTrack = next

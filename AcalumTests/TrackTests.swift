@@ -21,6 +21,7 @@ final class TrackTests: XCTestCase {
             title: "Test Track",
             composer: "Composer",
             performer: "Performer",
+            artworkURL: nil,
             audioURL: URL(string: "https://example.com/audio.mp3")!,
             durationSeconds: 180,
             sourceName: "Test Source",

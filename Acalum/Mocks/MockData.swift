@@ -36,6 +36,7 @@ enum MockData {
             sourceURL: URL(string: "https://archive.org/details/RecuerdosDeLaAlhambra"),
             audioURL: URL(string: "https://archive.org/download/78_recuerdos-de-la-alhambra_andres-segovia-tarrega_gbia0002029a/Recuerdos%20de%20la%20Alhambra%20-%20Andr%C3%A9s%20Segovia-restored.mp3")!,
             durationSeconds: 326,
+            artworkURL: nil,
             license: "Public Domain",
             year: 1927,
             explanation: TrackExplanation(
@@ -54,6 +55,7 @@ enum MockData {
             sourceURL: URL(string: "https://musopen.org/music/2034-suite-bergamasque-l-75/"),
             audioURL: URL(string: "https://archive.org/download/78_clair-de-lune_walter-gieseking-debussy_gbia0001791a/Clair%20de%20Lune%20-%20Walter%20Gieseking-restored.mp3")!,
             durationSeconds: 302,
+            artworkURL: nil,
             license: "Public Domain",
             year: 1951,
             explanation: TrackExplanation(
@@ -72,6 +74,7 @@ enum MockData {
             sourceURL: URL(string: "https://archive.org/details/gymnopedies"),
             audioURL: URL(string: "https://archive.org/download/78_gymnopedie-no1_reinbert-de-leeuw-erik-satie_gbia0001234a/Gymnopedie%20No.1%20-%20restored.mp3")!,
             durationSeconds: 194,
+            artworkURL: nil,
             license: "Public Domain",
             year: 1888,
             explanation: TrackExplanation(
@@ -90,6 +93,7 @@ enum MockData {
             sourceURL: URL(string: "https://archive.org/details/ave-maria-schubert"),
             audioURL: URL(string: "https://archive.org/download/78_ave-maria_marian-anderson-schubert_gbia0005678a/Ave%20Maria%20-%20Marian%20Anderson-restored.mp3")!,
             durationSeconds: 278,
+            artworkURL: nil,
             license: "Public Domain",
             year: 1936,
             explanation: TrackExplanation(
@@ -108,6 +112,7 @@ enum MockData {
             sourceURL: URL(string: "https://archive.org/details/moonlight-sonata"),
             audioURL: URL(string: "https://archive.org/download/78_sonata-no14-moonlight_artur-schnabel-beethoven_gbia0003456a/Moonlight%20Sonata%20-%20Artur%20Schnabel-restored.mp3")!,
             durationSeconds: 378,
+            artworkURL: nil,
             license: "Public Domain",
             year: 1934,
             explanation: TrackExplanation(
