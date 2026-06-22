@@ -1,4 +1,5 @@
 import Foundation
+import os
 
 final class LocalRecommendationEngine: QueueServiceProtocol {
     private let catalog: [TrackVectorRecord]
@@ -39,12 +40,25 @@ final class LocalRecommendationEngine: QueueServiceProtocol {
             return []
         }
 
+        let hasPrompt = context.prompt.map { !$0.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty } ?? false
+        let shuffleN = hasPrompt ? 0 : 5
+
         let reranked = reranker.rerank(
             results: results,
             selectedPills: context.selectedPills,
             recentTrackIDs: Set(context.recentlyPlayedTrackIDs),
-            favoriteTrackIDs: Set(context.favoriteTrackIDs)
+            favoriteTrackIDs: Set(context.favoriteTrackIDs),
+            shuffleTopN: shuffleN
         )
+
+        if !reranked.isEmpty {
+            let top = reranked.prefix(3)
+            for (i, r) in top.enumerated() {
+                os_log(.info, "Recommendation: #%d \"%@\" by %@ score=%.3f reasons=%@",
+                       i + 1, r.track.title, r.track.composer ?? "?",
+                       r.score, r.explanation.joined(separator: "; "))
+            }
+        }
 
         return reranked.map(mapToTrack)
     }

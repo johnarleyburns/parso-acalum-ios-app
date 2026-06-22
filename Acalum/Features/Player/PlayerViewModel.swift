@@ -21,7 +21,7 @@ final class PlayerViewModel: ObservableObject {
     @Published var activeSheet: Sheet?
 
     private var queue: PlaybackQueue
-    private let audioService: AudioPlayerService
+    private let audioService: any AudioPlayerServiceProtocol
     private let feedbackTracker: FeedbackTracker
     private let queueService: QueueServiceProtocol
     private var cancellables = Set<AnyCancellable>()
@@ -39,7 +39,7 @@ final class PlayerViewModel: ObservableObject {
     }
 
     init(
-        audioService: AudioPlayerService = AudioPlayerService(),
+        audioService: any AudioPlayerServiceProtocol = AudioPlayerService(),
         feedbackTracker: FeedbackTracker = FeedbackTracker(),
         queueService: QueueServiceProtocol = MockQueueService()
     ) {
@@ -158,7 +158,7 @@ final class PlayerViewModel: ObservableObject {
             feedbackTracker.log(type: .pillSelected, selectedPillIDs: selectedPills.map(\.id))
         }
         LocalStore.saveLastPillIDs(selectedPills.map(\.id))
-        refreshQueue()
+        replaceQueueAndPlay()
     }
 
     func submitPrompt() {
@@ -166,7 +166,32 @@ final class PlayerViewModel: ObservableObject {
         guard !trimmed.isEmpty else { return }
         feedbackTracker.log(type: .promptChanged, prompt: trimmed, selectedPillIDs: selectedPills.map(\.id))
         LocalStore.saveLastPrompt(trimmed)
-        refreshQueue()
+        replaceQueueAndPlay()
+    }
+
+    private func replaceQueueAndPlay() {
+        audioService.stop()
+        currentTrack = nil
+
+        Task { @MainActor [weak self] in
+            guard let self else { return }
+            let context = DiscoveryContext(
+                prompt: self.prompt.isEmpty ? nil : self.prompt,
+                selectedPills: Array(self.selectedPills),
+                dislikedTrackIDs: [],
+                favoriteTrackIDs: Array(self.favoriteIDs),
+                recentlyPlayedTrackIDs: self.queue.history.map(\.id)
+            )
+            let tracks = await self.queueService.generateQueue(context: context)
+            self.queue = PlaybackQueue(tracks: tracks)
+
+            if let next = self.queue.current {
+                _ = self.queue.skipToNext()
+                self.currentTrack = next
+                self.audioService.play(url: next.audioURL)
+                self.feedbackTracker.log(type: .playStarted, trackID: next.id, selectedPillIDs: self.selectedPills.map(\.id))
+            }
+        }
     }
 
     private func handleTrackFinished() {

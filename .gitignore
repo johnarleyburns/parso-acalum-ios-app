@@ -37,3 +37,17 @@ fastlane/test_output
 
 # Large database files (copied from parso-ia-music-indexer at build time)
 Acalum/Resources/*.db
+Acalum/Resources/*.db-shm
+Acalum/Resources/*.db-wal
+
+# Python diagnostics venv
+diagnostics/.venv/
+
+# Generated Core ML model (run export_for_ios.py to regenerate)
+Acalum/Resources/AcalumCLAPTextEncoder.mlpackage/
+Acalum/Resources/merges.txt
+Acalum/Resources/vocab.json
+Acalum/Resources/byte_encoder.json
+Acalum/Resources/tokenizer_config.json
+Acalum/Resources/tokenizer_full/
+Acalum/Resources/test_vectors.json

@@ -2,11 +2,16 @@ import AVFoundation
 import Combine
 import Foundation
 import MediaPlayer
+import os
 
 protocol AudioPlayerServiceProtocol: AnyObject {
     var statePublisher: AnyPublisher<PlaybackState, Never> { get }
     var currentTimePublisher: AnyPublisher<Double, Never> { get }
     var durationPublisher: AnyPublisher<Double, Never> { get }
+
+    var onTrackFinished: (() -> Void)? { get set }
+    var onInterruptionBegan: (() -> Void)? { get set }
+    var onInterruptionEnded: (() -> Void)? { get set }
 
     func play(url: URL)
     func pause()
@@ -44,8 +49,13 @@ final class AudioPlayerService: NSObject, AudioPlayerServiceProtocol, Observable
 
     private func configureAudioSession() {
         let session = AVAudioSession.sharedInstance()
-        try? session.setCategory(.playback, mode: .default)
-        try? session.setActive(true)
+        do {
+            try session.setCategory(.playback, mode: .default)
+            try session.setActive(true)
+            os_log(.info, "AudioPlayer: audio session activated, category=%@", session.category.rawValue)
+        } catch {
+            os_log(.error, "AudioPlayer: audio session setup failed: %{public}@", error.localizedDescription)
+        }
     }
 
     private func configureRemoteCommands() {
@@ -113,6 +123,7 @@ final class AudioPlayerService: NSObject, AudioPlayerServiceProtocol, Observable
     }
 
     func play(url: URL) {
+        os_log(.info, "AudioPlayer: play(url:) called with %{public}@", url.absoluteString)
         stop()
         stateSubject.send(.loading)
 
@@ -201,11 +212,22 @@ final class AudioPlayerService: NSObject, AudioPlayerServiceProtocol, Observable
                         self?.durationSubject.send(duration)
                     }
                     self?.stateSubject.send(.playing)
+                    os_log(.info, "AudioPlayer: item readyToPlay, duration=%.2fs", duration)
                 case .failed:
-                    let message = item.error?.localizedDescription ?? "Unknown error"
-                    self?.stateSubject.send(.failed(message))
-                default:
-                    break
+                    let nsError = item.error as NSError?
+                    let domain = nsError?.domain ?? "unknown"
+                    let code = nsError?.code ?? 0
+                    let desc = nsError?.localizedDescription ?? "Unknown error"
+                    let underlying = nsError?.userInfo[NSUnderlyingErrorKey] as? NSError
+                    os_log(.error, "AudioPlayer: item failed domain=%@ code=%d desc=\"%@\" underlying=%@ userInfo=%@",
+                           domain, code, desc,
+                           underlying?.description ?? "none",
+                           nsError?.userInfo.description ?? "none")
+                    self?.stateSubject.send(.failed(desc))
+                case .unknown:
+                    os_log(.debug, "AudioPlayer: item status = unknown")
+                @unknown default:
+                    os_log(.debug, "AudioPlayer: item status = @unknown default")
                 }
             }
             .store(in: &cancellables)

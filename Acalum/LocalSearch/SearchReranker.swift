@@ -2,9 +2,9 @@ import Foundation
 
 struct SearchReranker {
     struct Weights {
-        var clapSimilarity: Float = 0.80
-        var metadataPillScore: Float = 0.10
-        var noveltyScore: Float = 0.05
+        var clapSimilarity: Float = 0.50
+        var metadataPillScore: Float = 0.35
+        var noveltyScore: Float = 0.10
         var userTasteScore: Float = 0.05
     }
 
@@ -18,7 +18,8 @@ struct SearchReranker {
         results: [SearchResult],
         selectedPills: [DiscoveryPill] = [],
         recentTrackIDs: Set<String> = [],
-        favoriteTrackIDs: Set<String> = []
+        favoriteTrackIDs: Set<String> = [],
+        shuffleTopN: Int = 0
     ) -> [SearchResult] {
         var reranked = results.compactMap { result -> SearchResult? in
             guard !recentTrackIDs.contains(result.track.id) else { return nil }
@@ -50,27 +51,45 @@ struct SearchReranker {
         }
 
         reranked.sort { $0.score > $1.score }
+
+        if shuffleTopN > 1, reranked.count > shuffleTopN {
+            let topN = reranked.prefix(shuffleTopN).shuffled()
+            let rest = reranked.suffix(from: shuffleTopN)
+            reranked = Array(topN) + Array(rest)
+        }
+
         return reranked
     }
 
     private func computePillScore(record: TrackVectorRecord, pills: [DiscoveryPill]) -> Float {
         guard !pills.isEmpty else { return 0 }
+
         let titleLower = record.title.lowercased()
         let composerLower = (record.composer ?? "").lowercased()
-        let tags = record.tags ?? []
+        let tags = (record.tags ?? []).map { $0.lowercased() }
+        let searchableText = "\(titleLower) \(composerLower) \(tags.joined(separator: " "))"
 
-        var matches: Float = 0
+        let stopWords: Set<String> = ["", ",", "and", "the", "of", "in", "for", "a", "an", "to", "with", "or", "is", "it", "on", "at", "by", "as", "be", "no", "not", "but"]
+
+        var wordHits = 0
+        var wordCount = 0
+
         for pill in pills {
-            let label = pill.label.lowercased()
-            if titleLower.contains(label) || composerLower.contains(label) {
-                matches += 1
-                continue
-            }
-            if tags.contains(where: { $0.lowercased().contains(label) }) {
-                matches += 1
+            let phrase = pill.semanticPhrase.isEmpty ? pill.label : pill.semanticPhrase
+            let words = phrase.lowercased()
+                .components(separatedBy: CharacterSet(charactersIn: " ,;"))
+                .filter { !stopWords.contains($0) }
+
+            for word in words {
+                wordCount += 1
+                if searchableText.contains(word) {
+                    wordHits += 1
+                }
             }
         }
-        return min(matches / Float(pills.count), 1.0)
+
+        guard wordCount > 0 else { return 0 }
+        return Float(wordHits) / Float(wordCount)
     }
 
     private func computeNoveltyScore(record: TrackVectorRecord, recentIDs: Set<String>) -> Float {

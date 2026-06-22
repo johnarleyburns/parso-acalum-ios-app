@@ -18,6 +18,10 @@ final class APIClient: APIClientProtocol {
     }
 
     func sendEvents(request: EventsRequest) async throws -> EventsResponse {
+        guard baseURL.host != "api.example.com" else {
+            return EventsResponse(accepted: request.events.count)
+        }
+
         let url = baseURL.appendingPathComponent("events")
         var urlRequest = URLRequest(url: url)
         urlRequest.httpMethod = "POST"

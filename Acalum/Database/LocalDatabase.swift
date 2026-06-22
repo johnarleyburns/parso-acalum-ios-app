@@ -10,10 +10,24 @@ final class LocalDatabase {
     private let db: OpaquePointer
 
     convenience init() throws {
-        guard let path = Bundle.main.path(forResource: "parso_indexer", ofType: "db") else {
+        guard let bundlePath = Bundle.main.path(forResource: "parso_indexer", ofType: "db") else {
             throw Error(message: "parso_indexer.db not found in bundle")
         }
-        try self.init(fileURL: URL(fileURLWithPath: path))
+
+        let fileManager = FileManager.default
+        let appSupport = try fileManager.url(
+            for: .applicationSupportDirectory,
+            in: .userDomainMask,
+            appropriateFor: nil,
+            create: true
+        )
+        let dbURL = appSupport.appendingPathComponent("parso_indexer.db")
+
+        if !fileManager.fileExists(atPath: dbURL.path) {
+            try fileManager.copyItem(atPath: bundlePath, toPath: dbURL.path)
+        }
+
+        try self.init(fileURL: dbURL)
     }
 
     init(fileURL: URL) throws {
