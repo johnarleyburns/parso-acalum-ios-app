@@ -2,6 +2,7 @@ import SwiftUI
 
 struct PlayerHomeView: View {
     @StateObject var viewModel: PlayerViewModel
+    @State private var toastData: ToastData?
 
     var body: some View {
         ScrollView {
@@ -64,6 +65,14 @@ struct PlayerHomeView: View {
                 TrackInfoSheet(track: viewModel.currentTrack)
             case .settings:
                 SettingsSheet()
+            }
+        }
+        .toast(data: $toastData)
+        .onReceive(viewModel.networkMonitor.$isConnected.dropFirst()) { connected in
+            if connected {
+                toastData = ToastData(message: "Back online", icon: "wifi")
+            } else {
+                toastData = ToastData(message: "You're offline", icon: "wifi.slash")
             }
         }
     }
@@ -131,6 +140,13 @@ struct PlayerHomeView: View {
 
             Spacer()
 
+            if !viewModel.networkMonitor.isConnected {
+                Image(systemName: "wifi.slash")
+                    .font(.title3)
+                    .foregroundStyle(.orange)
+                    .transition(.opacity.combined(with: .scale(scale: 0.8)))
+            }
+
             Button {
                 viewModel.activeSheet = .settings
             } label: {
@@ -141,6 +157,7 @@ struct PlayerHomeView: View {
             .accessibilityLabel("Settings")
         }
         .padding(.horizontal, AcalumSpacing.md)
+        .animation(.easeInOut(duration: 0.3), value: viewModel.networkMonitor.isConnected)
     }
 
     private var progressView: some View {

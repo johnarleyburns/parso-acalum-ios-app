@@ -1,5 +1,9 @@
 import Foundation
 
+extension Notification.Name {
+    static let acalumFavoritesChanged = Notification.Name("acalumFavoritesChanged")
+}
+
 final class LocalStore {
     private static let favoritesKey = "acalum_favorites"
     private static let lastPromptKey = "acalum_last_prompt"
@@ -12,6 +16,7 @@ final class LocalStore {
 
     static func saveFavorites(_ ids: Set<String>) {
         UserDefaults.standard.set(Array(ids), forKey: favoritesKey)
+        NotificationCenter.default.post(name: .acalumFavoritesChanged, object: nil)
     }
 
     static func loadLastPrompt() -> String? {

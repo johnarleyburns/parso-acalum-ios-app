@@ -25,6 +25,8 @@ final class PlayerViewModel: ObservableObject {
     private let audioService: any AudioPlayerServiceProtocol
     private let feedbackTracker: FeedbackTracker
     private let queueService: QueueServiceProtocol
+    let networkMonitor: NetworkMonitor
+    private let downloadManager: DownloadManager?
     private var cancellables = Set<AnyCancellable>()
 
     var isPlaying: Bool { playbackState == .playing }
@@ -42,11 +44,15 @@ final class PlayerViewModel: ObservableObject {
     init(
         audioService: any AudioPlayerServiceProtocol = AudioPlayerService(),
         feedbackTracker: FeedbackTracker = FeedbackTracker(),
-        queueService: QueueServiceProtocol = MockQueueService()
+        queueService: QueueServiceProtocol = MockQueueService(),
+        networkMonitor: NetworkMonitor = NetworkMonitor(),
+        downloadManager: DownloadManager? = nil
     ) {
         self.audioService = audioService
         self.feedbackTracker = feedbackTracker
         self.queueService = queueService
+        self.networkMonitor = networkMonitor
+        self.downloadManager = downloadManager
         self.queue = PlaybackQueue()
         self.currentTrack = queue.current
         self.favoriteIDs = LocalStore.loadFavorites()
@@ -58,6 +64,34 @@ final class PlayerViewModel: ObservableObject {
         self.selectedPills = Set(MockData.pills.filter { savedPillIDs.contains($0.id) })
 
         bindAudio()
+        observeNetwork()
+        refreshQueue()
+    }
+
+    private func observeNetwork() {
+        networkMonitor.$isConnected
+            .dropFirst()
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] connected in
+                guard let self else { return }
+                if connected {
+                    self.handleCameOnline()
+                } else {
+                    self.handleWentOffline()
+                }
+            }
+            .store(in: &cancellables)
+    }
+
+    private func handleWentOffline() {
+        guard let dm = downloadManager else { return }
+        if let current = currentTrack,
+           dm.localAudioURL(for: current.id) == nil {
+            skip()
+        }
+    }
+
+    private func handleCameOnline() {
         refreshQueue()
     }
 
@@ -84,7 +118,7 @@ final class PlayerViewModel: ObservableObject {
 
         audioService.onInterruptionEnded = { [weak self] in
             guard let self, let track = self.currentTrack else { return }
-            self.audioService.play(url: track.audioURL)
+            self.audioService.play(url: self.resolveAudioURL(for: track))
         }
 
         audioService.onPlaybackFailed = { [weak self] in
@@ -164,29 +198,48 @@ final class PlayerViewModel: ObservableObject {
         replaceQueueAndPlay()
     }
 
+    private var offlineTrackIDs: Set<String>? {
+        guard let dm = downloadManager, !networkMonitor.isConnected else { return nil }
+        return dm.downloadedTrackIDs
+    }
+
+    private func makeDiscoveryContext() -> DiscoveryContext {
+        DiscoveryContext(
+            prompt: prompt.isEmpty ? nil : prompt,
+            selectedPills: Array(selectedPills),
+            dislikedTrackIDs: [],
+            favoriteTrackIDs: Array(favoriteIDs),
+            recentlyPlayedTrackIDs: queue.history.map(\.id),
+            offlineTrackIDs: offlineTrackIDs
+        )
+    }
+
     private func replaceQueueAndPlay() {
         audioService.stop()
         currentTrack = nil
 
         Task { @MainActor [weak self] in
             guard let self else { return }
-            let context = DiscoveryContext(
-                prompt: self.prompt.isEmpty ? nil : self.prompt,
-                selectedPills: Array(self.selectedPills),
-                dislikedTrackIDs: [],
-                favoriteTrackIDs: Array(self.favoriteIDs),
-                recentlyPlayedTrackIDs: self.queue.history.map(\.id)
-            )
+            let context = self.makeDiscoveryContext()
             let tracks = await self.queueService.generateQueue(context: context)
             self.queue = PlaybackQueue(tracks: tracks)
 
             if let next = self.queue.current {
                 _ = self.queue.skipToNext()
                 self.currentTrack = next
-                self.audioService.play(url: next.audioURL)
+                self.audioService.play(url: self.resolveAudioURL(for: next))
                 self.feedbackTracker.log(type: .playStarted, trackID: next.id, selectedPillIDs: self.selectedPills.map(\.id))
             }
         }
+    }
+
+    private func resolveAudioURL(for track: Track) -> URL {
+        if let dm = downloadManager,
+           !networkMonitor.isConnected,
+           let local = dm.localAudioURL(for: track.id) {
+            return local
+        }
+        return track.audioURL
     }
 
     private func handleTrackFinished() {
@@ -202,7 +255,7 @@ final class PlayerViewModel: ObservableObject {
 
         if let next = queue.skipToNext() {
             currentTrack = next
-            audioService.play(url: next.audioURL)
+            audioService.play(url: resolveAudioURL(for: next))
             feedbackTracker.log(type: .playStarted, trackID: next.id, selectedPillIDs: selectedPills.map(\.id))
         } else {
             currentTrack = nil
@@ -217,13 +270,7 @@ final class PlayerViewModel: ObservableObject {
     private func refreshQueue() {
         Task { @MainActor [weak self] in
             guard let self else { return }
-            let context = DiscoveryContext(
-                prompt: self.prompt.isEmpty ? nil : self.prompt,
-                selectedPills: Array(self.selectedPills),
-                dislikedTrackIDs: [],
-                favoriteTrackIDs: Array(self.favoriteIDs),
-                recentlyPlayedTrackIDs: self.queue.history.map(\.id)
-            )
+            let context = self.makeDiscoveryContext()
             let tracks = await self.queueService.generateQueue(context: context)
             self.queue.appendTracks(tracks)
 

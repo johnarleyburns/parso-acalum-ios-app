@@ -53,6 +53,7 @@
 		84E073E43178516878710026 /* VectorMath.swift in Sources */ = {isa = PBXBuildFile; fileRef = ABCB9B46D6F34712736D4E6B /* VectorMath.swift */; };
 		8C51FC6777D88C55FC7129DD /* LocalVectorSearchService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2F19CE187748F8DBF0F1573D /* LocalVectorSearchService.swift */; };
 		8ED52D4C2474D9153DBCB545 /* SearchResult.swift in Sources */ = {isa = PBXBuildFile; fileRef = 19AFB3CA54AD28FA2DF71CC9 /* SearchResult.swift */; };
+		92B5A4823B648F65C111EC35 /* ToastView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3E105F919841F5CAFFD7E5CA /* ToastView.swift */; };
 		9860A38DF040F14855F3A01C /* VectorMathTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = FE43D908262E15B000546D02 /* VectorMathTests.swift */; };
 		9D310DDBD98BC0B4EE6F9BD0 /* MockData.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8C16513EF65096B0A8DEBAB6 /* MockData.swift */; };
 		9EB0B4428701F6A3D6D1ACF1 /* LocalStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 04A1B14EF2D95945740D8F10 /* LocalStore.swift */; };
@@ -74,6 +75,7 @@
 		D6B4902AC98AA1182D3F9197 /* Pill.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7005719932AA9C9B693614D1 /* Pill.swift */; };
 		D7DDF99B1407C7BD4CD16DE9 /* Embedding512Tests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C688AE77CA52BA1A85053386 /* Embedding512Tests.swift */; };
 		DAE1C94F5B23A1BDDF8D36AC /* FeedbackEvent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 126D19C5FE06465C5C34F865 /* FeedbackEvent.swift */; };
+		DCC503F2D32D53A722D15118 /* DownloadManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA7295DE96109D87DDF324F8 /* DownloadManager.swift */; };
 		DD6F89E6516B7BC4E7CD2740 /* WhyThisSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6D839E2E9A01EF1DA9B78E18 /* WhyThisSheet.swift */; };
 		E8E4C9C14F833A00DFA4CBF5 /* Spacing.swift in Sources */ = {isa = PBXBuildFile; fileRef = 668E8FFBAD5AAABA00B05518 /* Spacing.swift */; };
 		ED7B2F8AAFF4514F89E50180 /* AmbientArtworkView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B7A9D85FFF7D304700181407 /* AmbientArtworkView.swift */; };
@@ -114,6 +116,7 @@
 		34A934AB52DB6B6771719780 /* parso_indexer.db-shm */ = {isa = PBXFileReference; path = "parso_indexer.db-shm"; sourceTree = "<group>"; };
 		36520687EC320F8C49EAC7DB /* TrackInfoSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TrackInfoSheet.swift; sourceTree = "<group>"; };
 		3B6E6500D1A3D9AE80E33826 /* DiscoveryContext.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiscoveryContext.swift; sourceTree = "<group>"; };
+		3E105F919841F5CAFFD7E5CA /* ToastView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ToastView.swift; sourceTree = "<group>"; };
 		3ED885775ADC8F8A65FA2DB4 /* SplashView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SplashView.swift; sourceTree = "<group>"; };
 		40B8EC014CCB8CA0D5E45064 /* vocab.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = vocab.json; sourceTree = "<group>"; };
 		42893302E5592467E3FD8C6B /* NowPlayingCardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NowPlayingCardView.swift; sourceTree = "<group>"; };
@@ -142,6 +145,7 @@
 		A5AB3EB6C3C6700FB979E09C /* TextEmbeddingService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TextEmbeddingService.swift; sourceTree = "<group>"; };
 		A8368CE6B01B47C4B2396C2E /* TrackVectorRecord.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TrackVectorRecord.swift; sourceTree = "<group>"; };
 		AA0402ECC4ECA20E6892E362 /* parso_indexer.db-wal */ = {isa = PBXFileReference; path = "parso_indexer.db-wal"; sourceTree = "<group>"; };
+		AA7295DE96109D87DDF324F8 /* DownloadManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DownloadManager.swift; sourceTree = "<group>"; };
 		ABC21E83903DC992C824D5D2 /* APIClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = APIClient.swift; sourceTree = "<group>"; };
 		ABCB9B46D6F34712736D4E6B /* VectorMath.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VectorMath.swift; sourceTree = "<group>"; };
 		ACF15090065A4147AE41F8A0 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
@@ -194,6 +198,7 @@
 		2645009A0F3DB0C9337BC577 /* Persistence */ = {
 			isa = PBXGroup;
 			children = (
+				AA7295DE96109D87DDF324F8 /* DownloadManager.swift */,
 				0DA312BF84FEFF365C52DF09 /* FeedbackEventStore.swift */,
 				04A1B14EF2D95945740D8F10 /* LocalStore.swift */,
 				EC44640557F705B8CED08C77 /* NetworkMonitor.swift */,
@@ -234,6 +239,7 @@
 			children = (
 				28183E4024AD3B38B8DF62AA /* HapticFeedback.swift */,
 				668E8FFBAD5AAABA00B05518 /* Spacing.swift */,
+				3E105F919841F5CAFFD7E5CA /* ToastView.swift */,
 				BAFD110A5F87635210F88EEC /* Typography.swift */,
 			);
 			path = DesignSystem;
@@ -564,6 +570,7 @@
 				07C02D26C8378C6F72A8D51D /* CLAPTokenizer.swift in Sources */,
 				CD654C2622FDFB9A281F6224 /* DTOs.swift in Sources */,
 				D2E8C915254BD92E01915DA1 /* DiscoveryContext.swift in Sources */,
+				DCC503F2D32D53A722D15118 /* DownloadManager.swift in Sources */,
 				3C97DECF572053A9BEFBC68D /* Embedding512.swift in Sources */,
 				70C77BCB95D92A29CB2AD844 /* ExactCosineVectorSearchService.swift in Sources */,
 				DAE1C94F5B23A1BDDF8D36AC /* FeedbackEvent.swift in Sources */,
@@ -598,6 +605,7 @@
 				68FB53DA2BAD1B322163618E /* TasteProfileStore.swift in Sources */,
 				175FA7DE9D1C7E05E33A9972 /* TasteVectorBuilder.swift in Sources */,
 				FD33BE5D3C6317294F116E86 /* TextEmbeddingService.swift in Sources */,
+				92B5A4823B648F65C111EC35 /* ToastView.swift in Sources */,
 				A5E193A644DE2C0E7CB0FF70 /* Track.swift in Sources */,
 				54E3A6D78077DBC80A03ED50 /* TrackInfoSheet.swift in Sources */,
 				269ED13EB0145440E873657E /* TrackVectorRecord.swift in Sources */,

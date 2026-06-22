@@ -62,11 +62,32 @@ final class SearchRerankerTests: XCTestCase {
 
     func testFavoriteTasteBoost() {
         let reranker = SearchReranker()
+        let favVector = try! Embedding512(values: [Float](repeating: 0, count: 512).enumerated().map { $0.offset == 0 ? 1.0 : 0 }).normalized()
+        let otherVector = try! Embedding512(values: [Float](repeating: 0, count: 512).enumerated().map { $0.offset == 0 ? 0 : ($0.offset == 1 ? 1.0 : 0) }).normalized()
+
+        var favValues = [Float](repeating: 0, count: 512)
+        favValues[0] = 1.0
+        var otherValues = [Float](repeating: 0, count: 512)
+        otherValues[1] = 1.0
+
+        let favRecord = TrackVectorRecord(
+            id: "fav", title: "Favorite Track", composer: nil, performer: nil,
+            clapVector: favVector, tags: nil, albumTitle: nil, albumSubjects: nil, albumGenres: nil,
+            durationSeconds: 180, sourceURL: nil, audioURL: nil, artURL: nil
+        )
+        let otherRecord = TrackVectorRecord(
+            id: "other", title: "Other Track", composer: nil, performer: nil,
+            clapVector: otherVector, tags: nil, albumTitle: nil, albumSubjects: nil, albumGenres: nil,
+            durationSeconds: 180, sourceURL: nil, audioURL: nil, artURL: nil
+        )
+
         let results = [
-            makeResult(id: "fav", score: 0.5),
-            makeResult(id: "other", score: 0.5),
+            SearchResult(track: favRecord, score: 0.5, explanation: []),
+            SearchResult(track: otherRecord, score: 0.5, explanation: []),
         ]
-        let reranked = reranker.rerank(results: results, favoriteTrackIDs: ["fav"])
+
+        let tasteVec = favVector
+        let reranked = reranker.rerank(results: results, favoriteTrackIDs: ["fav"], tasteVector: tasteVec)
         let favResult = reranked.first(where: { $0.track.id == "fav" })
         let otherResult = reranked.first(where: { $0.track.id == "other" })
         XCTAssertGreaterThan(favResult!.score, otherResult!.score)

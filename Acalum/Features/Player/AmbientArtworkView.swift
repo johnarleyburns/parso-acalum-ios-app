@@ -22,7 +22,16 @@ struct AmbientArtworkView: View {
     }
 
     var body: some View {
-        Group {
+        ZStack {
+            RoundedRectangle(cornerRadius: 20)
+                .fill(
+                    LinearGradient(
+                        colors: colors,
+                        startPoint: UnitPoint(x: 0.5 + 0.3 * cos(animationPhase), y: 0),
+                        endPoint: UnitPoint(x: 0.5 + 0.3 * sin(animationPhase), y: 1)
+                    )
+                )
+
             if let artworkURL = track?.artworkURL {
                 AsyncImage(url: artworkURL) { phase in
                     switch phase {
@@ -31,21 +40,14 @@ struct AmbientArtworkView: View {
                             .resizable()
                             .aspectRatio(contentMode: .fill)
                     case .failure, .empty:
-                        gradientView
+                        Color.clear
                     @unknown default:
-                        gradientView
+                        Color.clear
                     }
                 }
-            } else {
-                gradientView
             }
         }
         .clipShape(RoundedRectangle(cornerRadius: 20))
-        .overlay(
-            RoundedRectangle(cornerRadius: 20)
-                .fill(.ultraThinMaterial)
-                .opacity(0.3)
-        )
         .aspectRatio(1.0, contentMode: .fit)
         .onAppear {
             if isPlaying {
@@ -58,17 +60,6 @@ struct AmbientArtworkView: View {
             }
         }
         .accessibilityLabel("Album artwork")
-    }
-
-    private var gradientView: some View {
-        RoundedRectangle(cornerRadius: 20)
-            .fill(
-                LinearGradient(
-                    colors: colors,
-                    startPoint: UnitPoint(x: 0.5 + 0.3 * cos(animationPhase), y: 0),
-                    endPoint: UnitPoint(x: 0.5 + 0.3 * sin(animationPhase), y: 1)
-                )
-            )
     }
 
     private func startAnimation() {

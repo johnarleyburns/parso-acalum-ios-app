@@ -31,11 +31,16 @@ final class LocalRecommendationEngine: QueueServiceProtocol {
 
         let results: [SearchResult]
         do {
-            results = try await searchService.search(
+            let rawResults = try await searchService.search(
                 query: queryVector,
-                limit: searchLimit,
+                limit: searchLimit * 2,
                 excluding: excludedIDs
             )
+            if let offlineIDs = context.offlineTrackIDs {
+                results = rawResults.filter { offlineIDs.contains($0.track.id) }
+            } else {
+                results = rawResults
+            }
         } catch {
             return []
         }
@@ -43,11 +48,18 @@ final class LocalRecommendationEngine: QueueServiceProtocol {
         let hasPrompt = context.prompt.map { !$0.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty } ?? false
         let shuffleN = hasPrompt ? 0 : 5
 
+        let tasteVec = tasteBuilder.buildTasteVector(
+            favoriteTrackIDs: context.favoriteTrackIDs,
+            completedTrackIDs: [],
+            skippedTrackIDs: []
+        )
+
         let reranked = reranker.rerank(
             results: results,
             selectedPills: context.selectedPills,
             recentTrackIDs: Set(context.recentlyPlayedTrackIDs),
             favoriteTrackIDs: Set(context.favoriteTrackIDs),
+            tasteVector: tasteVec,
             shuffleTopN: shuffleN
         )
 

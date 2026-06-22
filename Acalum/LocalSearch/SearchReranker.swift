@@ -19,6 +19,7 @@ struct SearchReranker {
         selectedPills: [DiscoveryPill] = [],
         recentTrackIDs: Set<String> = [],
         favoriteTrackIDs: Set<String> = [],
+        tasteVector: Embedding512? = nil,
         shuffleTopN: Int = 0
     ) -> [SearchResult] {
         var reranked = results.compactMap { result -> SearchResult? in
@@ -27,7 +28,7 @@ struct SearchReranker {
             let clapScore = result.score
             let pillScore = computePillScore(record: result.track, pills: selectedPills)
             let novelty = computeNoveltyScore(record: result.track, recentIDs: recentTrackIDs)
-            let taste = computeTasteScore(record: result.track, favoriteIDs: favoriteTrackIDs)
+            let taste = computeTasteScore(record: result.track, tasteVector: tasteVector)
 
             let finalScore =
                 weights.clapSimilarity * clapScore
@@ -100,8 +101,10 @@ struct SearchReranker {
         recentIDs.contains(record.id) ? 0.0 : 1.0
     }
 
-    private func computeTasteScore(record: TrackVectorRecord, favoriteIDs: Set<String>) -> Float {
-        // TODO: Compare track CLAP vector against taste vector built from favorites
-        favoriteIDs.contains(record.id) ? 1.0 : 0.0
+    private func computeTasteScore(record: TrackVectorRecord, tasteVector: Embedding512?) -> Float {
+        guard let tasteVector else { return 0 }
+        let similarity = record.clapVector.cosineSimilarity(to: tasteVector)
+        let clamped = max(-1, min(1, similarity))
+        return (clamped + 1.0) / 2.0
     }
 }
