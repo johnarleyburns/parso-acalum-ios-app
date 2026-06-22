@@ -49,7 +49,8 @@ final class LocalDatabase {
         let sql = """
             SELECT t.id, t.title, t.duration, t.download_url,
                    a.ia_identifier, a.title AS album_title, a.creator, a.art_url,
-                   te.clap
+                   te.clap,
+                   t.tags, a.subjects, a.genres
             FROM tracks t
             JOIN albums a ON t.album_id = a.ia_identifier
             JOIN track_embeddings te ON t.id = te.track_id
@@ -95,13 +96,29 @@ final class LocalDatabase {
                 return (try? Embedding512(values: values)) ?? .zero
             }()
 
+            let tags: [String]? = sqlite3_column_text(stmt, 9)
+                .map { String(cString: $0) }
+                .map { $0.split(separator: ",").map { $0.trimmingCharacters(in: .whitespaces) } }
+
+            let albumTitle: String? = sqlite3_column_text(stmt, 5)
+                .map { String(cString: $0) }
+
+            let albumSubjects: String? = sqlite3_column_text(stmt, 10)
+                .map { String(cString: $0) }
+
+            let albumGenres: String? = sqlite3_column_text(stmt, 11)
+                .map { String(cString: $0) }
+
             records.append(TrackVectorRecord(
                 id: String(trackID),
                 title: title,
                 composer: creator,
                 performer: nil,
                 clapVector: clapVector,
-                tags: nil,
+                tags: tags,
+                albumTitle: albumTitle,
+                albumSubjects: albumSubjects,
+                albumGenres: albumGenres,
                 durationSeconds: duration > 0 ? duration : nil,
                 sourceURL: sourceURL,
                 audioURL: downloadURL,

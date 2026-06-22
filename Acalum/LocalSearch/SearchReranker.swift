@@ -67,7 +67,10 @@ struct SearchReranker {
         let titleLower = record.title.lowercased()
         let composerLower = (record.composer ?? "").lowercased()
         let tags = (record.tags ?? []).map { $0.lowercased() }
-        let searchableText = "\(titleLower) \(composerLower) \(tags.joined(separator: " "))"
+        let albumTitleLower = (record.albumTitle ?? "").lowercased()
+        let albumSubjectsLower = (record.albumSubjects ?? "").lowercased()
+        let albumGenresLower = (record.albumGenres ?? "").lowercased()
+        let searchableText = "\(titleLower) \(composerLower) \(tags.joined(separator: " ")) \(albumTitleLower) \(albumSubjectsLower) \(albumGenresLower)"
 
         let stopWords: Set<String> = ["", ",", "and", "the", "of", "in", "for", "a", "an", "to", "with", "or", "is", "it", "on", "at", "by", "as", "be", "no", "not", "but"]
 

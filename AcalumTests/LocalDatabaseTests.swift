@@ -67,33 +67,33 @@ final class LocalDatabaseTests: XCTestCase {
         defer { sqlite3_close(db) }
 
         try exec(db, """
-            CREATE TABLE tracks (id INTEGER PRIMARY KEY, album_id TEXT, title TEXT, duration REAL, download_url TEXT, status TEXT)
+            CREATE TABLE tracks (id INTEGER PRIMARY KEY, album_id TEXT, title TEXT, duration REAL, download_url TEXT, status TEXT, tags TEXT)
             """)
         try exec(db, """
-            CREATE TABLE albums (ia_identifier TEXT PRIMARY KEY, title TEXT, creator TEXT, art_url TEXT)
+            CREATE TABLE albums (ia_identifier TEXT PRIMARY KEY, title TEXT, creator TEXT, art_url TEXT, subjects TEXT, genres TEXT)
             """)
         try exec(db, """
             CREATE TABLE track_embeddings (track_id INTEGER PRIMARY KEY, clap BLOB, dim INTEGER, dtype TEXT)
             """)
 
         try exec(db, """
-            INSERT INTO albums VALUES ('bach_brandenburg', 'Brandenburg Concertos', 'J.S. Bach', 'https://archive.org/services/img/bach_brandenburg')
+            INSERT INTO albums VALUES ('bach_brandenburg', 'Brandenburg Concertos', 'J.S. Bach', 'https://archive.org/services/img/bach_brandenburg', NULL, NULL)
             """)
         try exec(db, """
-            INSERT INTO albums VALUES ('vivaldi_four_seasons', 'The Four Seasons', 'A. Vivaldi', NULL)
+            INSERT INTO albums VALUES ('vivaldi_four_seasons', 'The Four Seasons', 'A. Vivaldi', NULL, NULL, NULL)
             """)
 
         try exec(db, """
-            INSERT INTO tracks VALUES (1, 'bach_brandenburg', 'Brandenburg Concerto No. 3', 642.0, 'https://archive.org/download/bach_brandenburg/bach_01.mp3', 'completed')
+            INSERT INTO tracks VALUES (1, 'bach_brandenburg', 'Brandenburg Concerto No. 3', 642.0, 'https://archive.org/download/bach_brandenburg/bach_01.mp3', 'completed', NULL)
             """)
         try exec(db, """
-            INSERT INTO tracks VALUES (2, 'bach_brandenburg', 'Brandenburg Concerto No. 1', 610.0, 'https://archive.org/download/bach_brandenburg/bach_02.mp3', 'completed')
+            INSERT INTO tracks VALUES (2, 'bach_brandenburg', 'Brandenburg Concerto No. 1', 610.0, 'https://archive.org/download/bach_brandenburg/bach_02.mp3', 'completed', NULL)
             """)
         try exec(db, """
-            INSERT INTO tracks VALUES (3, 'vivaldi_four_seasons', 'Spring', 630.0, 'https://archive.org/download/vivaldi_four_seasons/vivaldi_spring.mp3', 'completed')
+            INSERT INTO tracks VALUES (3, 'vivaldi_four_seasons', 'Spring', 630.0, 'https://archive.org/download/vivaldi_four_seasons/vivaldi_spring.mp3', 'completed', NULL)
             """)
         try exec(db, """
-            INSERT INTO tracks VALUES (4, 'vivaldi_four_seasons', 'Winter', 0, NULL, 'pending')
+            INSERT INTO tracks VALUES (4, 'vivaldi_four_seasons', 'Winter', 0, NULL, 'pending', NULL)
             """)
 
         let blob = makeNormalizedF16Blob(dimension: 512)

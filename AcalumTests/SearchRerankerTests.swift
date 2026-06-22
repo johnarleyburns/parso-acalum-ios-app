@@ -2,7 +2,7 @@
 import XCTest
 
 final class SearchRerankerTests: XCTestCase {
-    private func makeResult(id: String, score: Float, title: String = "Track", composer: String? = nil, tags: [String]? = nil) -> SearchResult {
+    private func makeResult(id: String, score: Float, title: String = "Track", composer: String? = nil, tags: [String]? = nil, albumTitle: String? = nil, albumSubjects: String? = nil, albumGenres: String? = nil) -> SearchResult {
         var values = [Float](repeating: 0, count: 512)
         values[0] = 1.0
         let record = TrackVectorRecord(
@@ -12,6 +12,9 @@ final class SearchRerankerTests: XCTestCase {
             performer: nil,
             clapVector: try! Embedding512(values: values).normalized(),
             tags: tags,
+            albumTitle: albumTitle,
+            albumSubjects: albumSubjects,
+            albumGenres: albumGenres,
             durationSeconds: 180,
             sourceURL: nil,
             audioURL: nil,

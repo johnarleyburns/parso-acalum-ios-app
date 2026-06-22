@@ -7,6 +7,9 @@ struct TrackVectorRecord: Identifiable, Equatable {
     let performer: String?
     let clapVector: Embedding512
     let tags: [String]?
+    let albumTitle: String?
+    let albumSubjects: String?
+    let albumGenres: String?
     let durationSeconds: Double?
     let sourceURL: URL?
     let audioURL: URL?
