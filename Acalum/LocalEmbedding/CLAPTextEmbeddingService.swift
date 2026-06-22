@@ -29,12 +29,16 @@ final class CLAPTextEmbeddingService: TextEmbeddingService {
         ) else {
             throw CLAPTextEmbeddingError.modelNotBundled
         }
-        self.model = try MLModel(contentsOf: modelURL)
+        let config = MLModelConfiguration()
+        config.computeUnits = .cpuAndGPU
+        self.model = try MLModel(contentsOf: modelURL, configuration: config)
         self.tokenizer = try CLAPTokenizer()
     }
 
     init(modelURL: URL, tokenizer: CLAPTokenizer = try! CLAPTokenizer()) throws {
-        self.model = try MLModel(contentsOf: modelURL)
+        let config = MLModelConfiguration()
+        config.computeUnits = .cpuAndGPU
+        self.model = try MLModel(contentsOf: modelURL, configuration: config)
         self.tokenizer = tokenizer
     }
 
