@@ -1,4 +1,5 @@
 import SwiftUI
+import os
 
 @main
 struct AcalumApp: App {
@@ -22,6 +23,7 @@ struct AcalumApp: App {
         do {
             let db = try LocalDatabase()
             let catalog = try db.loadTracks()
+            os_log(.info, "makeQueueService: loaded %d tracks from database", catalog.count)
             let searchService = ExactCosineVectorSearchService(catalog: catalog)
             let tasteBuilder = TasteVectorBuilder(catalog: catalog)
             let textEmbedding = Self.makeTextEmbeddingService()
@@ -32,6 +34,7 @@ struct AcalumApp: App {
                 textEmbedding: textEmbedding
             )
         } catch {
+            os_log(.error, "makeQueueService: database load failed — falling back to mock data. error=%@", error.localizedDescription)
             return MockQueueService()
         }
     }

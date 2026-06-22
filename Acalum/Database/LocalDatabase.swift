@@ -1,5 +1,6 @@
 import Foundation
 import SQLite3
+import os
 
 final class LocalDatabase {
     struct Error: Swift.Error, LocalizedError {
@@ -23,7 +24,24 @@ final class LocalDatabase {
         )
         let dbURL = appSupport.appendingPathComponent("parso_indexer.db")
 
+        let shouldCopy: Bool
         if !fileManager.fileExists(atPath: dbURL.path) {
+            shouldCopy = true
+        } else {
+            let bundleDate = (try? fileManager.attributesOfItem(atPath: bundlePath)[.modificationDate]) as? Date
+            let cachedDate = (try? fileManager.attributesOfItem(atPath: dbURL.path)[.modificationDate]) as? Date
+            shouldCopy = {
+                guard let bundle = bundleDate else { return true }
+                guard let cached = cachedDate else { return true }
+                return bundle > cached
+            }()
+        }
+
+        if shouldCopy {
+            os_log(.info, "LocalDatabase: copying DB from bundle (bundle date: %@, cached date: %@)", 
+                   (try? fileManager.attributesOfItem(atPath: bundlePath)[.modificationDate]).map { "\($0)" } ?? "nil",
+                   (try? fileManager.attributesOfItem(atPath: dbURL.path)[.modificationDate]).map { "\($0)" } ?? "nil")
+            try? fileManager.removeItem(at: dbURL)
             try fileManager.copyItem(atPath: bundlePath, toPath: dbURL.path)
         }
 
