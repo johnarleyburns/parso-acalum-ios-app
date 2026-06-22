@@ -10,6 +10,7 @@ final class PlayerViewModel: ObservableObject {
     @Published var selectedPills: Set<Pill> = []
     @Published var prompt: String = ""
     @Published var favoriteIDs: Set<String> = []
+    @Published var isInitialLoading = true
 
     enum Sheet: Identifiable {
         case whyThis
@@ -86,6 +87,10 @@ final class PlayerViewModel: ObservableObject {
             self.audioService.play(url: track.audioURL)
         }
 
+        audioService.onPlaybackFailed = { [weak self] in
+            self?.handlePlaybackFailed()
+        }
+
         $currentTrack
             .receive(on: DispatchQueue.main)
             .sink { [weak self] track in
@@ -123,16 +128,7 @@ final class PlayerViewModel: ObservableObject {
         if let skippedID = skippedTrackID {
             TasteProfileStore.recordSkipped(skippedID, listenSeconds: currentTime)
         }
-
-        if let next = queue.skipToNext() {
-            currentTrack = next
-            audioService.play(url: next.audioURL)
-            feedbackTracker.log(type: .playStarted, trackID: next.id, selectedPillIDs: selectedPills.map(\.id))
-        } else {
-            audioService.stop()
-            currentTrack = nil
-            refreshQueue()
-        }
+        replaceQueueAndPlay()
     }
 
     func toggleFavorite() {
@@ -158,7 +154,6 @@ final class PlayerViewModel: ObservableObject {
             feedbackTracker.log(type: .pillSelected, selectedPillIDs: selectedPills.map(\.id))
         }
         LocalStore.saveLastPillIDs(selectedPills.map(\.id))
-        replaceQueueAndPlay()
     }
 
     func submitPrompt() {
@@ -215,21 +210,27 @@ final class PlayerViewModel: ObservableObject {
         }
     }
 
-    private func refreshQueue() {
-        Task {
-            let context = DiscoveryContext(
-                prompt: prompt.isEmpty ? nil : prompt,
-                selectedPills: Array(selectedPills),
-                dislikedTrackIDs: [],
-                favoriteTrackIDs: Array(favoriteIDs),
-                recentlyPlayedTrackIDs: queue.history.map(\.id)
-            )
-            let tracks = await queueService.generateQueue(context: context)
-            queue.appendTracks(tracks)
+    private func handlePlaybackFailed() {
+        replaceQueueAndPlay()
+    }
 
-            if currentTrack == nil, let next = queue.skipToNext() {
-                currentTrack = next
+    private func refreshQueue() {
+        Task { @MainActor [weak self] in
+            guard let self else { return }
+            let context = DiscoveryContext(
+                prompt: self.prompt.isEmpty ? nil : self.prompt,
+                selectedPills: Array(self.selectedPills),
+                dislikedTrackIDs: [],
+                favoriteTrackIDs: Array(self.favoriteIDs),
+                recentlyPlayedTrackIDs: self.queue.history.map(\.id)
+            )
+            let tracks = await self.queueService.generateQueue(context: context)
+            self.queue.appendTracks(tracks)
+
+            if self.currentTrack == nil, let next = self.queue.skipToNext() {
+                self.currentTrack = next
             }
+            self.isInitialLoading = false
         }
     }
 

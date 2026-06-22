@@ -13,7 +13,7 @@ final class PlayerViewModelTests: XCTestCase {
         LocalStore.saveFavorites([])
     }
 
-    func testTogglePillClearsQueueAndPlaysNewTrack() async throws {
+    func testTogglePillDoesNotAutoPlay() async throws {
         let audioService = MockAudioPlayerService()
         let queueService = MockRecommenderQueueService()
 
@@ -22,21 +22,16 @@ final class PlayerViewModelTests: XCTestCase {
             feedbackTracker: FeedbackTracker(),
             queueService: queueService
         )
-
-        // Wait for initial refreshQueue to settle
-        for _ in 0..<10 { await Task.yield(); if vm.currentTrack != nil { break } }
 
         let piano = Pill(id: "instrument:piano", label: "Piano", category: .instrument, semanticPhrase: "solo piano")
         vm.togglePill(piano)
+        await Task.yield()
 
-        for _ in 0..<50 { await Task.yield(); if audioService.didPlay { break } }
-
-        XCTAssertNotNil(vm.currentTrack, "currentTrack should be set after togglePill")
-        XCTAssertEqual(vm.currentTrack?.id, "pill_piano_001")
-        XCTAssertTrue(audioService.didPlay, "togglePill should auto-play")
+        XCTAssertTrue(vm.selectedPills.contains(piano), "Pill should be selected")
+        XCTAssertFalse(audioService.didPlay, "togglePill should NOT auto-play")
     }
 
-    func testSubmitPromptClearsQueueAndPlaysNewTrack() async throws {
+    func testSubmitPromptAutoPlays() async throws {
         let audioService = MockAudioPlayerService()
         let queueService = MockRecommenderQueueService()
 
@@ -45,8 +40,6 @@ final class PlayerViewModelTests: XCTestCase {
             feedbackTracker: FeedbackTracker(),
             queueService: queueService
         )
-
-        for _ in 0..<10 { await Task.yield(); if vm.currentTrack != nil { break } }
 
         vm.prompt = "slow solo piano"
         vm.submitPrompt()
@@ -58,7 +51,7 @@ final class PlayerViewModelTests: XCTestCase {
         XCTAssertTrue(audioService.didPlay, "submitPrompt should auto-play")
     }
 
-    func testTogglePillReplacesStaleTracks() async throws {
+    func testSkipRegeneratesQueueFromPills() async throws {
         let audioService = MockAudioPlayerService()
         let queueService = MockRecommenderQueueService()
 
@@ -68,27 +61,24 @@ final class PlayerViewModelTests: XCTestCase {
             queueService: queueService
         )
 
+        // Select pills first
         let piano = Pill(id: "instrument:piano", label: "Piano", category: .instrument, semanticPhrase: "solo piano")
-        vm.togglePill(piano)
-        for _ in 0..<50 { await Task.yield(); if vm.currentTrack != nil { break } }
-
-        let firstTrack = vm.currentTrack
-        XCTAssertEqual(firstTrack?.id, "pill_piano_001")
-
-        audioService.didPlay = false
         let melancholy = Pill(id: "mood:melancholy", label: "Melancholy", category: .mood, semanticPhrase: "melancholy, sad")
+        vm.togglePill(piano)
         vm.togglePill(melancholy)
-        for _ in 0..<50 { await Task.yield(); if vm.currentTrack != nil && vm.currentTrack?.id != firstTrack?.id { break } }
 
-        let secondTrack = vm.currentTrack
-        XCTAssertNotNil(secondTrack, "Should have a new track after toggling second pill")
-        XCTAssertEqual(secondTrack?.id, "pill_piano_mel_001", "Second track should reflect combined pills")
-        XCTAssertNotEqual(secondTrack?.id, firstTrack?.id, "togglePill should replace the queue, not append")
+        // Skip should regenerate based on current pills
+        vm.skip()
+        for _ in 0..<50 { await Task.yield(); if audioService.didPlay { break } }
+
+        XCTAssertNotNil(vm.currentTrack, "skip should enqueue and play a track")
+        XCTAssertEqual(vm.currentTrack?.id, "pill_piano_mel_001", "Skip should use current pills to generate")
+        XCTAssertTrue(audioService.didPlay, "skip should auto-play")
     }
 
-    func testSkipDoesNotAutoPlayIfQueueEmpty() async throws {
+    func testSkipWithEmptyQueueGeneratesFresh() async throws {
         let audioService = MockAudioPlayerService()
-        let queueService = EmptyQueueService()
+        let queueService = MockRecommenderQueueService()
 
         let vm = PlayerViewModel(
             audioService: audioService,
@@ -96,11 +86,11 @@ final class PlayerViewModelTests: XCTestCase {
             queueService: queueService
         )
 
-        for _ in 0..<10 { await Task.yield() }
         vm.skip()
-        await Task.yield()
+        for _ in 0..<50 { await Task.yield(); if audioService.didPlay { break } }
 
-        XCTAssertNil(vm.currentTrack, "Skip with empty queue should leave currentTrack nil")
+        // Even with empty queue, skip calls replaceQueueAndPlay which generates and plays
+        XCTAssertNotNil(vm.currentTrack, "skip should generate and play even with empty queue")
     }
 
     func testIsFavoritedReflectsFavorites() async throws {
@@ -142,6 +132,7 @@ final class MockAudioPlayerService: AudioPlayerServiceProtocol, ObservableObject
     var onTrackFinished: (() -> Void)?
     var onInterruptionBegan: (() -> Void)?
     var onInterruptionEnded: (() -> Void)?
+    var onPlaybackFailed: (() -> Void)?
 
     func play(url: URL) {
         didPlay = true
@@ -230,11 +221,5 @@ final class MockRecommenderQueueService: QueueServiceProtocol {
         }
 
         return [tracks[2]]
-    }
-}
-
-final class EmptyQueueService: QueueServiceProtocol {
-    func generateQueue(context: DiscoveryContext) async -> [Track] {
-        return []
     }
 }

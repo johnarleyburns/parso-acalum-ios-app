@@ -12,6 +12,7 @@ protocol AudioPlayerServiceProtocol: AnyObject {
     var onTrackFinished: (() -> Void)? { get set }
     var onInterruptionBegan: (() -> Void)? { get set }
     var onInterruptionEnded: (() -> Void)? { get set }
+    var onPlaybackFailed: (() -> Void)? { get set }
 
     func play(url: URL)
     func pause()
@@ -39,6 +40,7 @@ final class AudioPlayerService: NSObject, AudioPlayerServiceProtocol, Observable
     var onTrackFinished: (() -> Void)?
     var onInterruptionBegan: (() -> Void)?
     var onInterruptionEnded: (() -> Void)?
+    var onPlaybackFailed: (() -> Void)?
 
     override init() {
         super.init()
@@ -224,6 +226,9 @@ final class AudioPlayerService: NSObject, AudioPlayerServiceProtocol, Observable
                            underlying?.description ?? "none",
                            nsError?.userInfo.description ?? "none")
                     self?.stateSubject.send(.failed(desc))
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) { [weak self] in
+                        self?.onPlaybackFailed?()
+                    }
                 case .unknown:
                     os_log(.debug, "AudioPlayer: item status = unknown")
                 @unknown default:

@@ -17,7 +17,11 @@ struct PlayerHomeView: View {
                 NowPlayingCardView(track: viewModel.currentTrack)
 
                 if viewModel.currentTrack == nil {
-                    emptyStateView
+                    if viewModel.isInitialLoading || viewModel.playbackState == .loading {
+                        loadingCardView
+                    } else {
+                        emptyStateView
+                    }
                 } else {
                     progressView
 
@@ -52,11 +56,6 @@ struct PlayerHomeView: View {
             .padding(.top, AcalumSpacing.sm)
         }
         .background(Color(.systemBackground))
-        .overlay {
-            if case .loading = viewModel.playbackState {
-                loadingOverlay
-            }
-        }
         .sheet(item: $viewModel.activeSheet) { sheet in
             switch sheet {
             case .whyThis:
@@ -67,6 +66,18 @@ struct PlayerHomeView: View {
                 SettingsSheet()
             }
         }
+    }
+
+    private var loadingCardView: some View {
+        VStack(spacing: AcalumSpacing.md) {
+            ProgressView()
+                .scaleEffect(1.1)
+            Text("Loading...")
+                .font(AcalumTypography.body)
+                .foregroundStyle(.secondary)
+        }
+        .frame(maxWidth: .infinity)
+        .padding(.vertical, AcalumSpacing.xl)
     }
 
     private var emptyStateView: some View {

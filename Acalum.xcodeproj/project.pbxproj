@@ -77,6 +77,7 @@
 		DD6F89E6516B7BC4E7CD2740 /* WhyThisSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6D839E2E9A01EF1DA9B78E18 /* WhyThisSheet.swift */; };
 		E8E4C9C14F833A00DFA4CBF5 /* Spacing.swift in Sources */ = {isa = PBXBuildFile; fileRef = 668E8FFBAD5AAABA00B05518 /* Spacing.swift */; };
 		ED7B2F8AAFF4514F89E50180 /* AmbientArtworkView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B7A9D85FFF7D304700181407 /* AmbientArtworkView.swift */; };
+		F145B5EEAC1CAE0A89E260AD /* SplashView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3ED885775ADC8F8A65FA2DB4 /* SplashView.swift */; };
 		FB4A7E87D269ED6A70791D17 /* ExactCosineVectorSearchTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 712F08F424D91F0DE17E00FE /* ExactCosineVectorSearchTests.swift */; };
 		FD33BE5D3C6317294F116E86 /* TextEmbeddingService.swift in Sources */ = {isa = PBXBuildFile; fileRef = A5AB3EB6C3C6700FB979E09C /* TextEmbeddingService.swift */; };
 /* End PBXBuildFile section */
@@ -113,6 +114,7 @@
 		34A934AB52DB6B6771719780 /* parso_indexer.db-shm */ = {isa = PBXFileReference; path = "parso_indexer.db-shm"; sourceTree = "<group>"; };
 		36520687EC320F8C49EAC7DB /* TrackInfoSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TrackInfoSheet.swift; sourceTree = "<group>"; };
 		3B6E6500D1A3D9AE80E33826 /* DiscoveryContext.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiscoveryContext.swift; sourceTree = "<group>"; };
+		3ED885775ADC8F8A65FA2DB4 /* SplashView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SplashView.swift; sourceTree = "<group>"; };
 		40B8EC014CCB8CA0D5E45064 /* vocab.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = vocab.json; sourceTree = "<group>"; };
 		42893302E5592467E3FD8C6B /* NowPlayingCardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NowPlayingCardView.swift; sourceTree = "<group>"; };
 		4A2954A4AD0E36632554E9A2 /* byte_encoder.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = byte_encoder.json; sourceTree = "<group>"; };
@@ -370,6 +372,7 @@
 		F304D95BC042CD72165E0587 /* Features */ = {
 			isa = PBXGroup;
 			children = (
+				3ED885775ADC8F8A65FA2DB4 /* SplashView.swift */,
 				4EBA159026F73AAAEFCE7F88 /* Discovery */,
 				CF8F376F07542F0025A42015 /* Player */,
 				DE924046C2891390C57F0BB9 /* Settings */,
@@ -590,6 +593,7 @@
 				75D049F4E6C54AD380A7FBC0 /* SessionStore.swift in Sources */,
 				80D258048994F5DFE9AFF851 /* SettingsSheet.swift in Sources */,
 				E8E4C9C14F833A00DFA4CBF5 /* Spacing.swift in Sources */,
+				F145B5EEAC1CAE0A89E260AD /* SplashView.swift in Sources */,
 				31A2615A4F97998AD0BCE663 /* SyncManager.swift in Sources */,
 				68FB53DA2BAD1B322163618E /* TasteProfileStore.swift in Sources */,
 				175FA7DE9D1C7E05E33A9972 /* TasteVectorBuilder.swift in Sources */,

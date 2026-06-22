@@ -5,6 +5,7 @@ import os
 struct AcalumApp: App {
     let queueService: QueueServiceProtocol
     let syncManager: SyncManager
+    @State private var showSplash = true
 
     init() {
         let networkMonitor = NetworkMonitor()
@@ -15,7 +16,14 @@ struct AcalumApp: App {
 
     var body: some Scene {
         WindowGroup {
-            PlayerHomeView(viewModel: PlayerViewModel(queueService: queueService))
+            ZStack {
+                PlayerHomeView(viewModel: PlayerViewModel(queueService: queueService))
+
+                if showSplash {
+                    SplashView(isPresented: $showSplash)
+                        .zIndex(10)
+                }
+            }
         }
     }
 
