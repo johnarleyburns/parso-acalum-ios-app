@@ -183,6 +183,7 @@
 		D4EC078DD5EB5016217E9983 /* MoodIndexCalibrator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MoodIndexCalibrator.swift; sourceTree = "<group>"; };
 		D5C16353C3D50A9114E7F338 /* PlaybackQueueTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlaybackQueueTests.swift; sourceTree = "<group>"; };
 		DCB1E6D6D19A41C875CD20BA /* CLAPTextEmbeddingService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CLAPTextEmbeddingService.swift; sourceTree = "<group>"; };
+		E676A379FBB96FED55D47E16 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		EB410CB2D1ABCEBAF8498DA0 /* MoodMatch.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MoodMatch.swift; sourceTree = "<group>"; };
 		EC44640557F705B8CED08C77 /* NetworkMonitor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NetworkMonitor.swift; sourceTree = "<group>"; };
 		EC4B57BD4FDCA371643A827A /* LocalRecommendationEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocalRecommendationEngine.swift; sourceTree = "<group>"; };
@@ -198,6 +199,7 @@
 		0A94840AE037E42D6AC837E7 /* Acalum */ = {
 			isa = PBXGroup;
 			children = (
+				E676A379FBB96FED55D47E16 /* Info.plist */,
 				37B9787D66C6E1F40F6736B2 /* App */,
 				E60AD4D70A19AC7F624DEBB9 /* Audio */,
 				F69986B2C6C827E0D409CBAE /* Database */,
@@ -766,18 +768,7 @@
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = 3264Y8YUGV;
-				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_KEY_CFBundleDisplayName = Acalum;
-				INFOPLIST_KEY_NSAppTransportSecurity_NSAllowsArbitraryLoads = NO;
-				INFOPLIST_KEY_NSAppTransportSecurity_NSExceptionDomains_archive.org_NSExceptionAllowsInsecureHTTPLoads = NO;
-				INFOPLIST_KEY_NSAppTransportSecurity_NSExceptionDomains_archive.org_NSExceptionRequiresForwardSecrecy = NO;
-				INFOPLIST_KEY_NSAppTransportSecurity_NSExceptionDomains_archive.org_NSIncludesSubdomains = YES;
-				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
-				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
-				INFOPLIST_KEY_UIBackgroundModes = audio;
-				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
-				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
-				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = UIInterfaceOrientationPortrait;
+				INFOPLIST_FILE = Acalum/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -795,18 +786,7 @@
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = 3264Y8YUGV;
-				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_KEY_CFBundleDisplayName = Acalum;
-				INFOPLIST_KEY_NSAppTransportSecurity_NSAllowsArbitraryLoads = NO;
-				INFOPLIST_KEY_NSAppTransportSecurity_NSExceptionDomains_archive.org_NSExceptionAllowsInsecureHTTPLoads = NO;
-				INFOPLIST_KEY_NSAppTransportSecurity_NSExceptionDomains_archive.org_NSExceptionRequiresForwardSecrecy = NO;
-				INFOPLIST_KEY_NSAppTransportSecurity_NSExceptionDomains_archive.org_NSIncludesSubdomains = YES;
-				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
-				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
-				INFOPLIST_KEY_UIBackgroundModes = audio;
-				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
-				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
-				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = UIInterfaceOrientationPortrait;
+				INFOPLIST_FILE = Acalum/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",

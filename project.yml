@@ -41,21 +41,34 @@ targets:
         excludes:
           - "**/.DS_Store"
           - "Resources/tokenizer_full/**"
+    info:
+      path: Acalum/Info.plist
+      properties:
+        CFBundleDisplayName: Acalum
+        UIBackgroundModes:
+          - audio
+        UIApplicationSceneManifest:
+          UIApplicationSupportsMultipleScenes: false
+          UISceneConfigurations: {}
+        UIApplicationSupportsIndirectInputEvents: true
+        UILaunchScreen: {}
+        UISupportedInterfaceOrientations:
+          - UIInterfaceOrientationPortrait
+        UISupportedInterfaceOrientations~ipad:
+          - UIInterfaceOrientationPortrait
+          - UIInterfaceOrientationPortraitUpsideDown
+          - UIInterfaceOrientationLandscapeLeft
+          - UIInterfaceOrientationLandscapeRight
+        NSAppTransportSecurity:
+          NSAllowsArbitraryLoads: false
+          NSExceptionDomains:
+            archive.org:
+              NSIncludesSubdomains: true
+              NSExceptionRequiresForwardSecrecy: false
+              NSExceptionAllowsInsecureHTTPLoads: false
     settings:
       base:
-        INFOPLIST_KEY_CFBundleDisplayName: Acalum
-        INFOPLIST_KEY_NSAppTransportSecurity_NSAllowsArbitraryLoads: NO
-        INFOPLIST_KEY_NSAppTransportSecurity_NSExceptionDomains_archive.org_NSIncludesSubdomains: YES
-        INFOPLIST_KEY_NSAppTransportSecurity_NSExceptionDomains_archive.org_NSExceptionRequiresForwardSecrecy: NO
-        INFOPLIST_KEY_NSAppTransportSecurity_NSExceptionDomains_archive.org_NSExceptionAllowsInsecureHTTPLoads: NO
-        INFOPLIST_KEY_UIApplicationSceneManifest_Generation: YES
-        INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents: YES
-        INFOPLIST_KEY_UILaunchScreen_Generation: YES
-        INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone: UIInterfaceOrientationPortrait
-        INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad: "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight"
-        INFOPLIST_KEY_UIBackgroundModes: audio
         ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
-        GENERATE_INFOPLIST_FILE: YES
         CODE_SIGN_STYLE: Automatic
         CODE_SIGN_IDENTITY: "iPhone Developer"
         DEVELOPMENT_TEAM: 3264Y8YUGV
