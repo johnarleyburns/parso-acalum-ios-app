@@ -57,6 +57,9 @@ private struct UpNextRowView: View {
             HStack(spacing: AcalumSpacing.md) {
                 if let mm = track.moodMatch {
                     MoodRingView(index: mm.index, size: 42, showLabel: false)
+                        .onTapGesture {
+                            withAnimation(.easeInOut(duration: 0.25)) { expanded.toggle() }
+                        }
                 }
                 VStack(alignment: .leading, spacing: 2) {
                     Text(track.title)
@@ -78,10 +81,9 @@ private struct UpNextRowView: View {
                 .buttonStyle(.plain)
             }
             .padding(.vertical, AcalumSpacing.sm)
-            .opacity(1) // animation handled by transition
 
             if expanded, let mm = track.moodMatch {
-                MatchDetailsView(match: mm)
+                MatchDetailsView(match: mm, expanded: $expanded)
                     .padding(.leading, 55)
                     .padding(.bottom, 14)
                     .transition(.opacity.combined(with: .move(edge: .top)))

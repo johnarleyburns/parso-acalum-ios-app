@@ -36,15 +36,16 @@ struct PillSelectorView: View {
             }
             .padding(.horizontal, AcalumSpacing.xs)
 
-            FlowLayout(spacing: AcalumSpacing.sm) {
-                ForEach(grouped, id: \.0) { (category, categoryPills) in
-                    Text(category.rawValue)
-                        .font(.system(size: 11, weight: .semibold, design: .rounded))
-                        .foregroundStyle(.tertiary)
-                        .textCase(.uppercase)
-                        .padding(.horizontal, 4)
-                        .padding(.top, 2)
+            ForEach(grouped, id: \.0) { (category, categoryPills) in
+                Text(category.rawValue)
+                    .font(.system(size: 11, weight: .semibold, design: .rounded))
+                    .foregroundStyle(.tertiary)
+                    .textCase(.uppercase)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(.horizontal, 4)
+                    .padding(.top, 2)
 
+                FlowLayout(spacing: AcalumSpacing.sm) {
                     ForEach(categoryPills) { pill in
                         PillButton(
                             pill: pill,

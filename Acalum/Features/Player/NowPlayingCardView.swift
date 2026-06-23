@@ -2,6 +2,7 @@ import SwiftUI
 
 struct NowPlayingCardView: View {
     let track: Track?
+    @State private var detailsExpanded = false
 
     var body: some View {
         VStack(spacing: 0) {
@@ -28,11 +29,14 @@ struct NowPlayingCardView: View {
 
                 if let mm = track?.moodMatch {
                     MoodRingView(index: mm.index)
+                        .onTapGesture {
+                            withAnimation(.easeInOut(duration: 0.25)) { detailsExpanded.toggle() }
+                        }
                 }
             }
 
             if let mm = track?.moodMatch {
-                MatchDetailsView(match: mm)
+                MatchDetailsView(match: mm, expanded: $detailsExpanded)
                     .padding(.top, 12)
             }
         }

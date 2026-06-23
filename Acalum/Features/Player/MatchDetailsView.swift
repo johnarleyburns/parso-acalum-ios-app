@@ -2,7 +2,7 @@ import SwiftUI
 
 struct MatchDetailsView: View {
     let match: MoodMatch
-    @State private var expanded = false
+    @Binding var expanded: Bool
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
