@@ -3,6 +3,7 @@ import SwiftUI
 struct UpNextListView: View {
     let tracks: [Track]
     let hasNoStrongMatches: Bool
+    let onTapTrack: ((Int) -> Void)?
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
@@ -39,6 +40,9 @@ struct UpNextListView: View {
 
             ForEach(Array(tracks.enumerated()), id: \.element.id) { i, track in
                 UpNextRowView(track: track, delay: Double(i) * 0.04)
+                    .onTapGesture {
+                        onTapTrack?(i)
+                    }
                 if track.id != tracks.last?.id {
                     Divider()
                 }

@@ -18,6 +18,7 @@ protocol AudioPlayerServiceProtocol: AnyObject {
     func pause()
     func resume()
     func stop()
+    func seek(to time: TimeInterval)
     func updateNowPlaying(track: Track?)
 }
 
@@ -63,19 +64,29 @@ final class AudioPlayerService: NSObject, AudioPlayerServiceProtocol, Observable
     private func configureRemoteCommands() {
         let center = MPRemoteCommandCenter.shared()
 
+        center.playCommand.isEnabled = true
         center.playCommand.addTarget { [weak self] _ in
             self?.resume()
             return .success
         }
+        center.pauseCommand.isEnabled = true
         center.pauseCommand.addTarget { [weak self] _ in
             self?.pause()
             return .success
         }
+        center.togglePlayPauseCommand.isEnabled = true
+        center.togglePlayPauseCommand.addTarget { [weak self] _ in
+            self?.player?.rate == 0 ? self?.resume() : self?.pause()
+            return .success
+        }
+        center.nextTrackCommand.isEnabled = true
         center.nextTrackCommand.addTarget { [weak self] _ in
             self?.onTrackFinished?()
             return .success
         }
+        center.previousTrackCommand.isEnabled = true
         center.previousTrackCommand.addTarget { _ in .success }
+        center.changePlaybackPositionCommand.isEnabled = true
         center.changePlaybackPositionCommand.addTarget { [weak self] event in
             guard let event = event as? MPChangePlaybackPositionCommandEvent,
                   let player = self?.player else { return .commandFailed }
@@ -127,6 +138,13 @@ final class AudioPlayerService: NSObject, AudioPlayerServiceProtocol, Observable
     func play(url: URL) {
         os_log(.info, "AudioPlayer: play(url:) called with %{public}@", url.absoluteString)
         stop()
+
+        do {
+            try AVAudioSession.sharedInstance().setActive(true)
+        } catch {
+            os_log(.error, "AudioPlayer: failed to reactivate audio session: %{public}@", error.localizedDescription)
+        }
+
         stateSubject.send(.loading)
 
         let item = AVPlayerItem(url: url)
@@ -145,6 +163,7 @@ final class AudioPlayerService: NSObject, AudioPlayerServiceProtocol, Observable
     }
 
     func resume() {
+        try? AVAudioSession.sharedInstance().setActive(true)
         player?.play()
         stateSubject.send(.playing)
     }
@@ -159,6 +178,16 @@ final class AudioPlayerService: NSObject, AudioPlayerServiceProtocol, Observable
         clearNowPlaying()
     }
 
+    func seek(to time: TimeInterval) {
+        let cmTime = CMTime(seconds: time, preferredTimescale: 600)
+        player?.seek(to: cmTime)
+        currentTimeSubject.send(time)
+        if var info = MPNowPlayingInfoCenter.default().nowPlayingInfo {
+            info[MPNowPlayingInfoPropertyElapsedPlaybackTime] = time
+            MPNowPlayingInfoCenter.default().nowPlayingInfo = info
+        }
+    }
+
     func updateNowPlaying(track: Track?) {
         guard let track else {
             clearNowPlaying()
@@ -171,6 +200,7 @@ final class AudioPlayerService: NSObject, AudioPlayerServiceProtocol, Observable
             MPMediaItemPropertyPlaybackDuration: track.durationSeconds,
             MPNowPlayingInfoPropertyElapsedPlaybackTime: currentTimeSubject.value,
             MPNowPlayingInfoPropertyPlaybackRate: 1.0,
+            MPNowPlayingInfoPropertyMediaType: MPNowPlayingInfoMediaType.audio.rawValue,
         ]
 
         if let artURL = track.artworkURL {

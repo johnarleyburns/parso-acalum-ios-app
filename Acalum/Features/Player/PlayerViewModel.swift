@@ -49,6 +49,10 @@ final class PlayerViewModel: ObservableObject {
         return currentTime / duration
     }
 
+    func seek(to time: Double) {
+        audioService.seek(to: time)
+    }
+
     init(
         audioService: any AudioPlayerServiceProtocol = AudioPlayerService(),
         feedbackTracker: FeedbackTracker = FeedbackTracker(),
@@ -131,6 +135,7 @@ final class PlayerViewModel: ObservableObject {
         audioService.onInterruptionEnded = { [weak self] in
             guard let self, let track = self.currentTrack else { return }
             self.audioService.play(url: self.resolveAudioURL(for: track))
+            self.audioService.updateNowPlaying(track: track)
         }
 
         audioService.onPlaybackFailed = { [weak self] in
@@ -173,7 +178,31 @@ final class PlayerViewModel: ObservableObject {
         if let skippedID = skippedTrackID {
             TasteProfileStore.recordSkipped(skippedID, listenSeconds: currentTime)
         }
-        replaceQueueAndPlay()
+
+        if let next = queue.skipToNext() {
+            surface(next)
+            upNext = queue.upcoming
+        } else {
+            replaceQueueAndPlay()
+        }
+    }
+
+    func playFromUpNext(at index: Int) {
+        let skippedTrackID = currentTrack?.id
+        feedbackTracker.log(
+            type: .skipped,
+            trackID: skippedTrackID,
+            listenSeconds: currentTime,
+            selectedPillIDs: committedPills.map(\.id)
+        )
+        if let skippedID = skippedTrackID {
+            TasteProfileStore.recordSkipped(skippedID, listenSeconds: currentTime)
+        }
+
+        if let next = queue.jumpTo(index: index) {
+            surface(next)
+            upNext = queue.upcoming
+        }
     }
 
     func toggleFavorite() {
@@ -228,6 +257,7 @@ final class PlayerViewModel: ObservableObject {
     private func surface(_ track: Track) {
         currentTrack = track
         audioService.play(url: resolveAudioURL(for: track))
+        audioService.updateNowPlaying(track: track)
         feedbackTracker.log(type: .playStarted, trackID: track.id, selectedPillIDs: committedPills.map(\.id))
         SeenHistoryStore.record(track.id)
     }
@@ -258,9 +288,8 @@ final class PlayerViewModel: ObservableObject {
             let tracks = await self.queueService.generateQueue(context: context)
             self.queue = PlaybackQueue(tracks: tracks)
 
-            if let next = self.queue.current {
-                _ = self.queue.skipToNext()
-                self.surface(next)
+            if let first = self.queue.current {
+                self.surface(first)
             }
             self.upNext = self.queue.upcoming
         }
@@ -319,7 +348,6 @@ final class PlayerViewModel: ObservableObject {
             guard let self else { return }
             let tracks = await self.queueService.generateQueue(context: self.makeContext())
             self.queue = PlaybackQueue(tracks: [self.currentTrack].compactMap { $0 } + tracks)
-            _ = self.queue.skipToNext()
             self.upNext = self.queue.upcoming
         }
     }

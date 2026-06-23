@@ -28,6 +28,17 @@ struct PlaybackQueue {
         return current
     }
 
+    mutating func jumpTo(index: Int) -> Track? {
+        guard upcoming.indices.contains(index) else { return nil }
+        if let current = current {
+            history.append(current)
+        }
+        history.append(contentsOf: upcoming[0..<index])
+        current = upcoming[index]
+        upcoming.removeSubrange(0...index)
+        return current
+    }
+
     mutating func appendTracks(_ tracks: [Track]) {
         let existingIDs = Set(upcoming.map(\.id) + [current?.id].compactMap { $0 })
         let newTracks = tracks.filter { !existingIDs.contains($0.id) }

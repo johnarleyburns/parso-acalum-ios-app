@@ -240,6 +240,8 @@ final class MockAudioPlayerService: AudioPlayerServiceProtocol, ObservableObject
     var didPause = false
     var didResume = false
     var didStop = false
+    var didSeek = false
+    var seekTime: TimeInterval = 0
     var lastPlayedURL: URL?
     var lastNowPlayingTrack: Track?
 
@@ -267,6 +269,12 @@ final class MockAudioPlayerService: AudioPlayerServiceProtocol, ObservableObject
     func stop() {
         didStop = true
         stateSubject.send(.idle)
+    }
+
+    func seek(to time: TimeInterval) {
+        didSeek = true
+        seekTime = time
+        currentTimeSubject.send(time)
     }
 
     func updateNowPlaying(track: Track?) {

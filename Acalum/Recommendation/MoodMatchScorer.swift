@@ -32,8 +32,13 @@ struct MoodMatchScorer {
                 matched: hit))
         }
 
-        let tag = pills.isEmpty ? 0 : Float(matched) / Float(pills.count)
-        let raw = clamp01(clapWeight * clamp01(clap) + tagWeight * tag)
+        let raw: Float
+        if pills.isEmpty {
+            raw = clamp01(clap)
+        } else {
+            let tagRatio = Float(matched) / Float(pills.count)
+            raw = clamp01(clapWeight * clamp01(clap) * max(tagRatio, 0.15) + tagWeight * tagRatio)
+        }
         let index = calibrator.index(raw)
 
         let acoustic = MoodComponent(

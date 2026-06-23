@@ -40,4 +40,35 @@ final class PlaybackQueueTests: XCTestCase {
         let totalExpected = MockData.tracks.count - 1
         XCTAssertEqual(queue.upcomingCount, totalExpected)
     }
+
+    func testJumpToFirstUpcoming() {
+        var queue = PlaybackQueue(tracks: MockData.tracks)
+        let originalCurrent = queue.current
+        let targetUpcoming = queue.upcoming[0]
+        let originalUpcomingCount = queue.upcomingCount
+
+        let result = queue.jumpTo(index: 0)
+        XCTAssertNotNil(result)
+        XCTAssertEqual(result?.id, targetUpcoming.id)
+        XCTAssertEqual(queue.history.count, 1)
+        XCTAssertEqual(queue.history.first?.id, originalCurrent?.id)
+        XCTAssertEqual(queue.upcomingCount, originalUpcomingCount - 1)
+    }
+
+    func testJumpToMiddleUpcoming() {
+        var queue = PlaybackQueue(tracks: MockData.tracks)
+        let targetIndex = 2
+        let targetTrack = queue.upcoming[targetIndex]
+        let result = queue.jumpTo(index: targetIndex)
+        XCTAssertNotNil(result)
+        XCTAssertEqual(result?.id, targetTrack.id)
+        XCTAssertEqual(queue.history.count, targetIndex + 1)
+        XCTAssertNotEqual(queue.current?.id, MockData.tracks.first?.id)
+    }
+
+    func testJumpToOutOfBoundsReturnsNil() {
+        var queue = PlaybackQueue(tracks: MockData.tracks)
+        let result = queue.jumpTo(index: 999)
+        XCTAssertNil(result)
+    }
 }

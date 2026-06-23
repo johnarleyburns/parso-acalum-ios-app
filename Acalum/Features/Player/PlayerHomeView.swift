@@ -47,7 +47,7 @@ struct PlayerHomeView: View {
                     selectedPills: viewModel.draftPills,
                     pendingMoodChange: viewModel.pendingMoodChange,
                     onToggle: viewModel.togglePill,
-                    onApply: { viewModel.applyMood(startNow: false) },
+                    onApply: { viewModel.applyMood(startNow: true) },
                     onShake: viewModel.shakeItUp
                 )
                 .padding(.horizontal, AcalumSpacing.sm)
@@ -63,7 +63,8 @@ struct PlayerHomeView: View {
                     let noStrong = hasPillsOrPrompt && viewModel.upNext.allSatisfy { ($0.moodMatch?.index ?? 0) < 40 }
                     UpNextListView(
                         tracks: viewModel.upNext,
-                        hasNoStrongMatches: noStrong
+                        hasNoStrongMatches: noStrong,
+                        onTapTrack: { viewModel.playFromUpNext(at: $0) }
                     )
                     .padding(.horizontal, AcalumSpacing.sm)
                 }
@@ -163,9 +164,14 @@ struct PlayerHomeView: View {
 
     private var progressView: some View {
         VStack(spacing: AcalumSpacing.xs) {
-            ProgressView(value: viewModel.progress)
-                .tint(.primary)
-                .accessibilityLabel("Playback progress")
+            Slider(value: Binding(
+                get: { viewModel.progress },
+                set: { newProgress in
+                    viewModel.seek(to: newProgress * viewModel.duration)
+                }
+            ))
+            .tint(.primary)
+            .accessibilityLabel("Playback progress")
 
             HStack {
                 Text(viewModel.formattedTime(viewModel.currentTime))
@@ -174,7 +180,7 @@ struct PlayerHomeView: View {
 
                 Spacer()
 
-                Text(viewModel.formattedTime(viewModel.duration))
+                Text("-\(viewModel.formattedTime(viewModel.duration - viewModel.currentTime))")
                     .font(AcalumTypography.caption)
                     .foregroundStyle(.secondary)
             }
