@@ -14,6 +14,28 @@ struct PromptBarView: View {
                 .accessibilityLabel("Describe how the music should feel")
 
             if !prompt.isEmpty {
+                Text("\u{21B5} to apply")
+                    .font(.system(size: 10.5, weight: .medium, design: .rounded))
+                    .foregroundStyle(Color(.systemGray2))
+                    .padding(.horizontal, 6)
+                    .padding(.vertical, 2)
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 6)
+                            .strokeBorder(Color(.systemGray4), lineWidth: 1)
+                    )
+            } else {
+                Text("\u{21B5} to apply")
+                    .font(.system(size: 10.5, weight: .medium, design: .rounded))
+                    .foregroundStyle(Color(.systemGray3))
+                    .padding(.horizontal, 6)
+                    .padding(.vertical, 2)
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 6)
+                            .strokeBorder(Color(.systemGray4), lineWidth: 1)
+                    )
+            }
+
+            if !prompt.isEmpty {
                 Button(action: {
                     prompt = ""
                     onSubmit()

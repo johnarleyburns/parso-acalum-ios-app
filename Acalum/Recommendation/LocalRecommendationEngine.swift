@@ -5,77 +5,105 @@ final class LocalRecommendationEngine: QueueServiceProtocol {
     private let catalog: [TrackVectorRecord]
     private let searchService: LocalVectorSearchService
     private let tasteBuilder: TasteVectorBuilder
-    private let reranker: SearchReranker
+    private let scorer: MoodMatchScorer
+    private let planner: RotationPlanner
     private let textEmbedding: TextEmbeddingService?
-
-    private let searchLimit = 50
 
     init(
         catalog: [TrackVectorRecord],
         searchService: LocalVectorSearchService,
         tasteBuilder: TasteVectorBuilder,
-        reranker: SearchReranker = SearchReranker(),
+        scorer: MoodMatchScorer = MoodMatchScorer(),
+        planner: RotationPlanner = RotationPlanner(),
         textEmbedding: TextEmbeddingService? = nil
     ) {
         self.catalog = catalog
         self.searchService = searchService
         self.tasteBuilder = tasteBuilder
-        self.reranker = reranker
+        self.scorer = scorer
+        self.planner = planner
         self.textEmbedding = textEmbedding
     }
 
     func generateQueue(context: DiscoveryContext) async -> [Track] {
-        let queryVector = await buildQueryVector(from: context)
+        let query = await buildQueryVector(from: context)
+        let favorites = Set(context.favoriteTrackIDs)
+        let disliked = Set(context.dislikedTrackIDs)
+        let seen = Set(context.recentlyPlayedTrackIDs)
 
-        let excludedIDs = Set(context.recentlyPlayedTrackIDs + context.dislikedTrackIDs)
+        let k = SeenHistoryStore.capacity + planner.window + 50
+        let hardExclude = disliked.union(favorites)
 
-        let results: [SearchResult]
+        let raw: [SearchResult]
         do {
-            let rawResults = try await searchService.search(
-                query: queryVector,
-                limit: searchLimit * 2,
-                excluding: excludedIDs
-            )
+            let searchResults = try await searchService.search(query: query, limit: k, excluding: hardExclude)
             if let offlineIDs = context.offlineTrackIDs {
-                results = rawResults.filter { offlineIDs.contains($0.track.id) }
+                raw = searchResults.filter { offlineIDs.contains($0.track.id) }
             } else {
-                results = rawResults
+                raw = searchResults
             }
         } catch {
             return []
         }
 
-        let hasPrompt = context.prompt.map { !$0.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty } ?? false
-        let shuffleN = hasPrompt ? 0 : 5
+        let scored = raw
+            .map { scorer.score(record: $0.track, clap: $0.score, recentIDs: seen, pills: context.selectedPills) }
+            .sorted { $0.moodMatch.index > $1.moodMatch.index }
 
-        let tasteVec = tasteBuilder.buildTasteVector(
-            favoriteTrackIDs: context.favoriteTrackIDs,
-            completedTrackIDs: [],
-            skippedTrackIDs: []
-        )
+        let planned = planner.plan(
+            ranked: scored, seen: seen, disliked: disliked,
+            refill: { [weak self] in self?.catalogFiller(query: query, exclude: hardExclude, pills: context.selectedPills) ?? [] })
 
-        let reranked = reranker.rerank(
-            results: results,
-            selectedPills: context.selectedPills,
-            recentTrackIDs: Set(context.recentlyPlayedTrackIDs),
-            favoriteTrackIDs: Set(context.favoriteTrackIDs),
-            tasteVector: tasteVec,
-            shuffleTopN: shuffleN
-        )
+        var tracks = planned.map(mapToTrack)
+        injectFavoriteRarely(&tracks, favorites: favorites)
 
-        if !reranked.isEmpty {
-            let top = reranked.prefix(3)
-            for (i, r) in top.enumerated() {
-                os_log(.info, "Recommendation: #%d \"%@\" by %@ score=%.3f reasons=%@",
-                       i + 1, r.track.title, r.track.composer ?? "?",
-                       r.score, r.explanation.joined(separator: "; "))
+        if !planned.isEmpty {
+            let top = planned.prefix(3)
+            for (i, st) in top.enumerated() {
+                os_log(.info, "Recommendation: #%d \"%@\" by %@ index=%d summary=%@",
+                       i + 1, st.record.title, st.record.composer ?? "?",
+                       st.moodMatch.index, st.moodMatch.summary)
             }
         }
 
-        return reranked.map(mapToTrack)
+        return tracks
     }
 
-    private func buildQueryVector(from context: DiscoveryContext) async -> Embedding512 {
+    private let favoriteInjectChance = 0.04
+
+    private func injectFavoriteRarely(_ tracks: inout [Track], favorites: Set<String>) {
+        guard !favorites.isEmpty, Double.random(in: 0..<1) < favoriteInjectChance,
+              let rec = catalog.filter({ favorites.contains($0.id) }).randomElement() else { return }
+        let mm = MoodMatch(index: 0, summary: "Resurfaced from your favorites",
+                           components: [], context: ["From your favorites"])
+        let st = ScoredTrack(record: rec, moodMatch: mm)
+        tracks.insert(mapToTrack(st), at: min(2, tracks.count))
+    }
+
+    private func catalogFiller(query: Embedding512, exclude: Set<String>, pills: [Pill]) -> [ScoredTrack] {
+        let q = query.normalized()
+        return catalog.lazy
+            .filter { !exclude.contains($0.id) }
+            .prefix(SeenHistoryStore.capacity + planner.window)
+            .map { scorer.score(record: $0, clap: q.dot($0.clapVector), recentIDs: [], pills: pills) }
+    }
+
+    private func mapToTrack(_ s: ScoredTrack) -> Track {
+        let r = s.record
+        return Track(
+            id: r.id, title: r.title, composer: r.composer, performer: r.performer,
+            sourceName: "Internet Archive", sourceURL: r.sourceURL,
+            audioURL: r.audioURL ?? URL(string: "https://archive.org")!,
+            durationSeconds: r.durationSeconds ?? 0, artworkURL: r.artURL,
+            license: "Public Domain", year: nil,
+            explanation: TrackExplanation(
+                reasons: s.moodMatch.components.map(\.label),
+                matchedPills: s.moodMatch.components.filter(\.matched).map(\.label),
+                similarityScore: Double(s.moodMatch.index) / 100, userTasteScore: nil),
+            moodMatch: s.moodMatch)
+    }
+
+    func buildQueryVector(from context: DiscoveryContext) async -> Embedding512 {
         if let prompt = context.prompt, !prompt.isEmpty,
            let embedding = try? await textEmbedding?.embed(prompt: prompt, pills: context.selectedPills) {
             return embedding
@@ -118,28 +146,5 @@ final class LocalRecommendationEngine: QueueServiceProtocol {
         }
 
         return .zero
-    }
-
-    private func mapToTrack(_ result: SearchResult) -> Track {
-        let record = result.track
-        return Track(
-            id: record.id,
-            title: record.title,
-            composer: record.composer,
-            performer: record.performer,
-            sourceName: "Internet Archive",
-            sourceURL: record.sourceURL,
-            audioURL: record.audioURL ?? URL(string: "https://archive.org")!,
-            durationSeconds: record.durationSeconds ?? 0,
-            artworkURL: record.artURL,
-            license: "Public Domain",
-            year: nil,
-            explanation: TrackExplanation(
-                reasons: result.explanation,
-                matchedPills: [],
-                similarityScore: Double(result.score),
-                userTasteScore: nil
-            )
-        )
     }
 }

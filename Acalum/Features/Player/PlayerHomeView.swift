@@ -39,18 +39,34 @@ struct PlayerHomeView: View {
                     errorBanner(message: message)
                 }
 
+                Divider()
+                    .padding(.horizontal, AcalumSpacing.xs)
+
                 PillSelectorView(
                     pills: MockData.pills,
-                    selectedPills: viewModel.selectedPills,
-                    onToggle: viewModel.togglePill
+                    selectedPills: viewModel.draftPills,
+                    pendingMoodChange: viewModel.pendingMoodChange,
+                    onToggle: viewModel.togglePill,
+                    onApply: { viewModel.applyMood(startNow: false) },
+                    onShake: viewModel.shakeItUp
                 )
                 .padding(.horizontal, AcalumSpacing.sm)
 
                 PromptBarView(
-                    prompt: $viewModel.prompt,
+                    prompt: $viewModel.draftPrompt,
                     onSubmit: viewModel.submitPrompt
                 )
                 .padding(.horizontal, AcalumSpacing.sm)
+
+                if !viewModel.upNext.isEmpty {
+                    let hasPillsOrPrompt = !viewModel.committedPills.isEmpty || !viewModel.committedPrompt.isEmpty
+                    let noStrong = hasPillsOrPrompt && viewModel.upNext.allSatisfy { ($0.moodMatch?.index ?? 0) < 40 }
+                    UpNextListView(
+                        tracks: viewModel.upNext,
+                        hasNoStrongMatches: noStrong
+                    )
+                    .padding(.horizontal, AcalumSpacing.sm)
+                }
 
                 Spacer(minLength: AcalumSpacing.lg)
             }
@@ -115,21 +131,6 @@ struct PlayerHomeView: View {
             )
             .padding(.horizontal, AcalumSpacing.md)
             .accessibilityLabel("Playback error: \(message)")
-    }
-
-    private var loadingOverlay: some View {
-        Color(.systemBackground)
-            .opacity(0.6)
-            .ignoresSafeArea()
-            .overlay {
-                VStack(spacing: AcalumSpacing.md) {
-                    ProgressView()
-                        .scaleEffect(1.2)
-                    Text("Loading...")
-                        .font(AcalumTypography.body)
-                        .foregroundStyle(.secondary)
-                }
-            }
     }
 
     private var headerView: some View {

@@ -3,7 +3,10 @@ import SwiftUI
 struct PillSelectorView: View {
     let pills: [Pill]
     let selectedPills: Set<Pill>
+    let pendingMoodChange: Bool
     let onToggle: (Pill) -> Void
+    let onApply: () -> Void
+    let onShake: () -> Void
 
     private var grouped: [(PillCategory, [Pill])] {
         let categories: [PillCategory] = [.instrument, .mood, .context, .era]
@@ -15,21 +18,58 @@ struct PillSelectorView: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: AcalumSpacing.sm) {
-            Text("How should the music feel?")
-                .font(AcalumTypography.caption)
-                .foregroundStyle(.secondary)
-                .padding(.horizontal, AcalumSpacing.xs)
+            HStack {
+                Text("How should the music feel?")
+                    .font(AcalumTypography.caption)
+                    .foregroundStyle(.secondary)
+                Spacer()
+                Button(action: onShake) {
+                    Label("Shake it up", systemImage: "arrow.triangle.2.circlepath")
+                        .font(AcalumTypography.caption)
+                        .padding(.horizontal, 12)
+                        .padding(.vertical, 7)
+                        .background(Capsule().fill(Color.orange.opacity(0.12)))
+                        .overlay(Capsule().strokeBorder(.orange, lineWidth: 1))
+                }
+                .tint(.orange)
+                .accessibilityHint("Switches to a new random mood")
+            }
+            .padding(.horizontal, AcalumSpacing.xs)
 
             FlowLayout(spacing: AcalumSpacing.sm) {
-                ForEach(pills) { pill in
-                    PillButton(
-                        pill: pill,
-                        isSelected: selectedPills.contains(pill),
-                        onTap: { onToggle(pill) }
-                    )
+                ForEach(grouped, id: \.0) { (category, categoryPills) in
+                    Text(category.rawValue)
+                        .font(.system(size: 11, weight: .semibold, design: .rounded))
+                        .foregroundStyle(.tertiary)
+                        .textCase(.uppercase)
+                        .padding(.horizontal, 4)
+                        .padding(.top, 2)
+
+                    ForEach(categoryPills) { pill in
+                        PillButton(
+                            pill: pill,
+                            isSelected: selectedPills.contains(pill),
+                            onTap: { onToggle(pill) }
+                        )
+                    }
                 }
             }
+
+            if pendingMoodChange {
+                Button(action: onApply) {
+                    Label("Apply new mood", systemImage: "checkmark.circle.fill")
+                        .font(AcalumTypography.headline)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 13)
+                        .background(RoundedRectangle(cornerRadius: 14).fill(Color.accentColor))
+                        .foregroundStyle(.white)
+                }
+                .padding(.top, AcalumSpacing.xs)
+                .transition(.move(edge: .top).combined(with: .opacity))
+                .accessibilityHint("Updates your stream with the pills you changed")
+            }
         }
+        .animation(.easeInOut(duration: 0.3), value: pendingMoodChange)
     }
 }
 

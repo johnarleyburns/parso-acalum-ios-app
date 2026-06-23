@@ -7,10 +7,13 @@ final class PlayerViewModel: ObservableObject {
     @Published var playbackState: PlaybackState = .idle
     @Published var currentTime: Double = 0
     @Published var duration: Double = 0
-    @Published var selectedPills: Set<Pill> = []
-    @Published var prompt: String = ""
+    @Published var draftPills: Set<Pill> = []
+    @Published private(set) var committedPills: Set<Pill> = []
+    @Published var draftPrompt: String = ""
+    @Published private(set) var committedPrompt: String = ""
     @Published var favoriteIDs: Set<String> = []
     @Published var isInitialLoading = true
+    @Published private(set) var upNext: [Track] = []
 
     enum Sheet: Identifiable {
         case whyThis
@@ -20,6 +23,11 @@ final class PlayerViewModel: ObservableObject {
         var id: String { String(describing: self) }
     }
     @Published var activeSheet: Sheet?
+
+    var pendingMoodChange: Bool {
+        draftPills != committedPills ||
+        draftPrompt.trimmingCharacters(in: .whitespacesAndNewlines) != committedPrompt
+    }
 
     private var queue: PlaybackQueue
     private let audioService: any AudioPlayerServiceProtocol
@@ -57,11 +65,15 @@ final class PlayerViewModel: ObservableObject {
         self.currentTrack = queue.current
         self.favoriteIDs = LocalStore.loadFavorites()
 
-        if let savedPrompt = LocalStore.loadLastPrompt() {
-            self.prompt = savedPrompt
-        }
         let savedPillIDs = Set(LocalStore.loadLastPillIDs())
-        self.selectedPills = Set(MockData.pills.filter { savedPillIDs.contains($0.id) })
+        let restoredPills = Set(MockData.pills.filter { savedPillIDs.contains($0.id) })
+        self.draftPills = restoredPills
+        self.committedPills = restoredPills
+
+        if let savedPrompt = LocalStore.loadLastPrompt() {
+            self.draftPrompt = savedPrompt
+            self.committedPrompt = savedPrompt
+        }
 
         bindAudio()
         observeNetwork()
@@ -137,8 +149,7 @@ final class PlayerViewModel: ObservableObject {
         switch playbackState {
         case .idle:
             guard let track = currentTrack else { return }
-            audioService.play(url: track.audioURL)
-            feedbackTracker.log(type: .playStarted, trackID: track.id, selectedPillIDs: selectedPills.map(\.id))
+            surface(track)
         case .playing:
             audioService.pause()
         case .paused:
@@ -147,7 +158,7 @@ final class PlayerViewModel: ObservableObject {
             break
         case .failed:
             guard let track = currentTrack else { return }
-            audioService.play(url: track.audioURL)
+            surface(track)
         }
     }
 
@@ -157,7 +168,7 @@ final class PlayerViewModel: ObservableObject {
             type: .skipped,
             trackID: skippedTrackID,
             listenSeconds: currentTime,
-            selectedPillIDs: selectedPills.map(\.id)
+            selectedPillIDs: committedPills.map(\.id)
         )
         if let skippedID = skippedTrackID {
             TasteProfileStore.recordSkipped(skippedID, listenSeconds: currentTime)
@@ -169,33 +180,56 @@ final class PlayerViewModel: ObservableObject {
         guard let track = currentTrack else { return }
         if favoriteIDs.contains(track.id) {
             favoriteIDs.remove(track.id)
-            feedbackTracker.log(type: .unfavorited, trackID: track.id, selectedPillIDs: selectedPills.map(\.id))
+            feedbackTracker.log(type: .unfavorited, trackID: track.id, selectedPillIDs: committedPills.map(\.id))
             TasteProfileStore.removeFavorite(track.id)
         } else {
             favoriteIDs.insert(track.id)
-            feedbackTracker.log(type: .favorited, trackID: track.id, selectedPillIDs: selectedPills.map(\.id))
+            feedbackTracker.log(type: .favorited, trackID: track.id, selectedPillIDs: committedPills.map(\.id))
             TasteProfileStore.recordFavorite(track.id)
         }
         LocalStore.saveFavorites(favoriteIDs)
     }
 
     func togglePill(_ pill: Pill) {
-        if selectedPills.contains(pill) {
-            selectedPills.remove(pill)
-            feedbackTracker.log(type: .pillRemoved, selectedPillIDs: selectedPills.map(\.id))
-        } else {
-            selectedPills.insert(pill)
-            feedbackTracker.log(type: .pillSelected, selectedPillIDs: selectedPills.map(\.id))
-        }
-        LocalStore.saveLastPillIDs(selectedPills.map(\.id))
+        if draftPills.contains(pill) { draftPills.remove(pill) } else { draftPills.insert(pill) }
+        HapticFeedback.selection()
     }
 
-    func submitPrompt() {
-        let trimmed = prompt.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !trimmed.isEmpty else { return }
-        feedbackTracker.log(type: .promptChanged, prompt: trimmed, selectedPillIDs: selectedPills.map(\.id))
-        LocalStore.saveLastPrompt(trimmed)
-        replaceQueueAndPlay()
+    func submitPrompt() { applyMood(startNow: true) }
+
+    func applyMood(startNow: Bool = false) {
+        committedPills = draftPills
+        committedPrompt = draftPrompt.trimmingCharacters(in: .whitespacesAndNewlines)
+        LocalStore.saveLastPillIDs(committedPills.map(\.id))
+        LocalStore.saveLastPrompt(committedPrompt.isEmpty ? nil : committedPrompt)
+        SeenHistoryStore.clear()
+        if startNow { replaceQueueAndPlay() } else { refreshUpcoming() }
+    }
+
+    func shakeItUp() {
+        HapticFeedback.medium()
+        draftPills = Self.randomCoherentPills(excluding: committedPills)
+        draftPrompt = ""
+        applyMood(startNow: true)
+    }
+
+    private static func randomCoherentPills(excluding current: Set<Pill>) -> Set<Pill> {
+        func pick(_ c: PillCategory) -> Pill? { MockData.pills.filter { $0.category == c }.randomElement() }
+        var next: Set<Pill> = []
+        repeat {
+            next = []
+            if let m = pick(.mood) { next.insert(m) }
+            if Bool.random(), let i = pick(.instrument) { next.insert(i) }
+            if Bool.random(), let x = pick(Bool.random() ? .context : .era) { next.insert(x) }
+        } while next == current || next.isEmpty
+        return next
+    }
+
+    private func surface(_ track: Track) {
+        currentTrack = track
+        audioService.play(url: resolveAudioURL(for: track))
+        feedbackTracker.log(type: .playStarted, trackID: track.id, selectedPillIDs: committedPills.map(\.id))
+        SeenHistoryStore.record(track.id)
     }
 
     private var offlineTrackIDs: Set<String>? {
@@ -203,13 +237,13 @@ final class PlayerViewModel: ObservableObject {
         return dm.downloadedTrackIDs
     }
 
-    private func makeDiscoveryContext() -> DiscoveryContext {
+    private func makeContext() -> DiscoveryContext {
         DiscoveryContext(
-            prompt: prompt.isEmpty ? nil : prompt,
-            selectedPills: Array(selectedPills),
+            prompt: committedPrompt.isEmpty ? nil : committedPrompt,
+            selectedPills: Array(committedPills),
             dislikedTrackIDs: [],
             favoriteTrackIDs: Array(favoriteIDs),
-            recentlyPlayedTrackIDs: queue.history.map(\.id),
+            recentlyPlayedTrackIDs: Array(Set(queue.history.map(\.id)).union(SeenHistoryStore.recentIDs)),
             offlineTrackIDs: offlineTrackIDs
         )
     }
@@ -220,16 +254,15 @@ final class PlayerViewModel: ObservableObject {
 
         Task { @MainActor [weak self] in
             guard let self else { return }
-            let context = self.makeDiscoveryContext()
+            let context = self.makeContext()
             let tracks = await self.queueService.generateQueue(context: context)
             self.queue = PlaybackQueue(tracks: tracks)
 
             if let next = self.queue.current {
                 _ = self.queue.skipToNext()
-                self.currentTrack = next
-                self.audioService.play(url: self.resolveAudioURL(for: next))
-                self.feedbackTracker.log(type: .playStarted, trackID: next.id, selectedPillIDs: self.selectedPills.map(\.id))
+                self.surface(next)
             }
+            self.upNext = self.queue.upcoming
         }
     }
 
@@ -247,16 +280,15 @@ final class PlayerViewModel: ObservableObject {
             type: .playCompleted,
             trackID: currentTrack?.id,
             listenSeconds: duration,
-            selectedPillIDs: selectedPills.map(\.id)
+            selectedPillIDs: committedPills.map(\.id)
         )
         if let completedID = currentTrack?.id {
             TasteProfileStore.recordCompleted(completedID)
         }
 
         if let next = queue.skipToNext() {
-            currentTrack = next
-            audioService.play(url: resolveAudioURL(for: next))
-            feedbackTracker.log(type: .playStarted, trackID: next.id, selectedPillIDs: selectedPills.map(\.id))
+            surface(next)
+            upNext = queue.upcoming
         } else {
             currentTrack = nil
             refreshQueue()
@@ -270,14 +302,25 @@ final class PlayerViewModel: ObservableObject {
     private func refreshQueue() {
         Task { @MainActor [weak self] in
             guard let self else { return }
-            let context = self.makeDiscoveryContext()
+            let context = self.makeContext()
             let tracks = await self.queueService.generateQueue(context: context)
             self.queue.appendTracks(tracks)
 
             if self.currentTrack == nil, let next = self.queue.skipToNext() {
                 self.currentTrack = next
             }
+            self.upNext = self.queue.upcoming
             self.isInitialLoading = false
+        }
+    }
+
+    private func refreshUpcoming() {
+        Task { @MainActor [weak self] in
+            guard let self else { return }
+            let tracks = await self.queueService.generateQueue(context: self.makeContext())
+            self.queue = PlaybackQueue(tracks: [self.currentTrack].compactMap { $0 } + tracks)
+            _ = self.queue.skipToNext()
+            self.upNext = self.queue.upcoming
         }
     }
 

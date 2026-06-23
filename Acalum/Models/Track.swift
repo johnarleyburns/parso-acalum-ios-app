@@ -13,6 +13,7 @@ struct Track: Identifiable, Codable, Equatable {
     let license: String?
     let year: Int?
     let explanation: TrackExplanation?
+    var moodMatch: MoodMatch? = nil
 }
 
 struct TrackExplanation: Codable, Equatable {

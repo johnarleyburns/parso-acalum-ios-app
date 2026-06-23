@@ -4,25 +4,47 @@ struct NowPlayingCardView: View {
     let track: Track?
 
     var body: some View {
-        VStack(spacing: AcalumSpacing.xs) {
-            Text(track?.title ?? "No Track")
-                .font(AcalumTypography.title)
-                .foregroundStyle(.primary)
-                .lineLimit(2)
-                .multilineTextAlignment(.center)
+        VStack(spacing: 0) {
+            HStack(alignment: .top, spacing: 14) {
+                VStack(alignment: .leading, spacing: 3) {
+                    Text(track?.title ?? "No Track")
+                        .font(.system(size: 18, weight: .semibold, design: .rounded))
+                        .foregroundStyle(.primary)
+                        .lineLimit(2)
 
-            if let composer = track?.composer {
-                Text(composer)
-                    .font(AcalumTypography.body)
-                    .foregroundStyle(.secondary)
+                    if let track = track {
+                        Text([track.composer, track.year.map(String.init)].compactMap { $0 }.joined(separator: " · "))
+                            .font(.system(size: 13.5, design: .rounded))
+                            .foregroundStyle(.secondary)
+
+                        Text("\(track.sourceName) · \(track.license ?? "Public Domain")")
+                            .font(.system(size: 11.5, design: .rounded))
+                            .foregroundStyle(Color(.systemBrown))
+                            .padding(.top, 4)
+                    }
+                }
+
+                Spacer(minLength: 0)
+
+                if let mm = track?.moodMatch {
+                    MoodRingView(index: mm.index)
+                }
             }
 
-            if let performer = track?.performer {
-                Text("Performed by \(performer)")
-                    .font(AcalumTypography.caption)
-                    .foregroundStyle(.tertiary)
+            if let mm = track?.moodMatch {
+                MatchDetailsView(match: mm)
+                    .padding(.top, 12)
             }
         }
+        .padding(16)
+        .background(
+            RoundedRectangle(cornerRadius: 18)
+                .fill(Color(.systemGray6))
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: 18)
+                .strokeBorder(Color(.systemGray5), lineWidth: 1)
+        )
         .accessibilityElement(children: .combine)
         .accessibilityLabel(accessibilityDescription)
     }
