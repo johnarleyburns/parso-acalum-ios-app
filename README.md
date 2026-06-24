@@ -1,45 +1,64 @@
-# Parso Muse — Agentic Coding Design Bundle
+# Acalum — Public Domain Music Discovery
 
-This bundle contains an implementation-ready design for **Parso Muse**, an iOS app for continuous public-domain music discovery using semantic similarity search over CLAP, MFCC, chroma, metadata, and user feedback.
+An iOS app for continuous public-domain music discovery using semantic similarity search over CLAP embeddings, MFCC, chroma, metadata, and user feedback. No accounts, no server dependency, offline-capable.
 
-The product is **not** a radio station app, playlist app, or album browser. It is a single continuous stream shaped by:
+Users shape a single continuous stream via instrument/mood/context/era pills, freeform natural-language prompts, skips, favorites, and listening duration.
 
-- instrument/mood/context/era pills
-- freeform natural language prompts
-- skips
-- favorites
-- listening duration
-- repeated behavior over time
+## Current Status
 
-## Recommended Build Order
+- **v0.1.0** — Core player, mood matching, background audio, offline downloads, splash, app icon.
+- **Build:** Green on iOS 17+ simulator and device.
+- See [`current_state.md`](current_state.md) for detailed module status and recent changes.
 
-1. Static SwiftUI prototype
-2. Local mock playback queue
-3. AVPlayer audio playback
-4. Backend queue-generation API integration
-5. Feedback event loop
-6. Recommendation explanation UI
-7. Polish, accessibility, haptics, lock-screen metadata
+## Stack
 
-## Bundle Contents
+- Swift + SwiftUI, iOS 17+
+- AVFoundation (AVPlayer + AVAudioSession) for audio playback
+- MediaPlayer (MPRemoteCommandCenter + MPNowPlayingInfoCenter) for lock screen / background audio
+- Core ML for CLAP text embedding (local on-device)
+- SQLite via `parso_indexer.db` (copied from sibling project at build time)
+- Accelerate (vDSP) for vector math
+- XcodeGen (`project.yml`) for project generation
+- Combine for reactive state
 
-| File | Purpose |
-|---|---|
-| `PRODUCT_SPEC.md` | Product vision, scope, MVP, core principles |
-| `UI_UX_SPEC.md` | UI/UX design, screens, interaction model |
-| `ASCII_WIREFRAMES.md` | ASCII-art layouts for implementation alignment |
-| `HLD.md` | High-level system architecture |
-| `LLD_IOS.md` | Low-level iOS architecture, modules, types |
-| `API_CONTRACTS.md` | Backend API request/response contracts |
-| `DATA_MODEL.md` | Backend and local persistence data models |
-| `RECOMMENDATION_ENGINE.md` | Scoring model and feedback loop |
-| `PHASED_IMPLEMENTATION_PLAN.md` | MVP and later phases with acceptance criteria |
-| `DECISION_POINTS.md` | Product decisions requiring owner input |
-| `AGENT_PROMPTS.md` | Prompts/instructions to feed into a coding agent |
-| `TEST_ACCEPTANCE_CRITERIA.md` | Functional, UX, accessibility, and regression checks |
-| `MASTER_SPEC.md` | Single-file consolidated version of the full design |
+## Setup
 
-## Core Product Sentence
+```bash
+# Generate Xcode project
+xcodegen
 
-> Describe how you want the music to feel, and Parso Muse continuously finds public-domain music that fits.
+# Build for simulator
+xcodebuild -project Acalum.xcodeproj -scheme Acalum \
+  -destination 'platform=iOS Simulator,id=FC7B2F90-A27B-4BD5-9313-7B267636E165' build
 
+# Run tests
+xcodebuild -project Acalum.xcodeproj -scheme Acalum \
+  -destination 'platform=iOS Simulator,id=FC7B2F90-A27B-4BD5-9313-7B267636E165' test
+```
+
+> **Note:** Real-device builds required to test background audio, interruptions, and lock screen behavior.
+
+## Architecture
+
+| Module | Purpose |
+|--------|---------|
+| `App/` | Entry point, splash screen |
+| `Audio/` | `AudioPlayerService`, `PlaybackQueue` |
+| `Database/` | `LocalDatabase`, `VectorMath` |
+| `DesignSystem/` | Spacing, typography, haptics, toasts |
+| `Features/Player/` | Player UI, mood ring, progress, up-next |
+| `Features/Discovery/` | Pill selector, prompt bar |
+| `Features/Settings/` | Settings sheet |
+| `LocalEmbedding/` | CLAP tokenizer, text embedding |
+| `LocalSearch/` | Cosine vector search |
+| `Models/` | Track, Pill, MoodMatch, DiscoveryContext |
+| `Persistence/` | LocalStore, SeenHistory, TasteProfile, Downloads |
+| `Recommendation/` | Mood scorer, calibrator, recommendation engine |
+
+## Image Credits
+
+- **Splash image:** "SAKURAKO listen to music" — Photo by MIKI Yoshihito (CC BY 2.0)
+
+## License
+
+Source code: MIT. Music: all sourced from the public domain.

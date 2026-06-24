@@ -17,13 +17,13 @@ struct SettingsSheet: View {
 
                 Section("Image Credits") {
                     VStack(alignment: .leading, spacing: 4) {
-                        Text("Splash image: \"Beautiful girl listening to music with headphones\"")
+                        Text("Splash image: \"SAKURAKO listen to music\"")
                             .font(AcalumTypography.body)
-                        Text("Licensed under CC BY-SA 4.0")
+                        Text("Photo by MIKI Yoshihito — CC BY 2.0")
                             .font(AcalumTypography.caption)
                             .foregroundStyle(.tertiary)
                         Link("View on Wikimedia Commons",
-                             destination: URL(string: "https://commons.wikimedia.org/wiki/File:Beautiful_girl_listening_to_music_with_headphones.jpg")!)
+                             destination: URL(string: "https://commons.wikimedia.org/wiki/File:SAKURAKO_listen_to_music_(46579718321).jpg")!)
                             .font(AcalumTypography.caption)
                     }
                     .padding(.vertical, 4)
