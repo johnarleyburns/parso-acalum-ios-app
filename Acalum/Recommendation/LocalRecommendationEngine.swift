@@ -34,10 +34,22 @@ final class LocalRecommendationEngine: QueueServiceProtocol {
 
     func generateQueue(context: DiscoveryContext) async -> [Track] {
         let query = await buildQueryVector(from: context)
-        let normalizedQuery = query.normalized()
+        var normalizedQuery = query.normalized()
         let favorites = Set(context.favoriteTrackIDs)
         let disliked = Set(context.dislikedTrackIDs)
         let seen = Set(context.recentlyPlayedTrackIDs)
+
+        let hasMood = !context.selectedPills.isEmpty || !(context.prompt ?? "").isEmpty
+
+        if let seedID = context.similarToTrackID,
+           let seedRecord = catalogByID[seedID] {
+            let seedVector = seedRecord.clapVector.normalized()
+            if hasMood {
+                normalizedQuery = normalizedQuery.weightedAdding(seedVector, selfWeight: 0.65, otherWeight: 0.35).normalized()
+            } else {
+                normalizedQuery = seedVector
+            }
+        }
 
         let k = SeenHistoryStore.capacity + planner.window + 50
         let exclude = disliked

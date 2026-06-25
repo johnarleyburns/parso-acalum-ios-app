@@ -1,6 +1,17 @@
 import Combine
 import Foundation
 
+struct MoodSignature: Equatable {
+    let pillIDs: [String]
+    let prompt: String
+}
+
+struct MoodTransition: Equatable {
+    let fromSignature: MoodSignature
+    let toSignature: MoodSignature
+    let startedAt: Date
+}
+
 @MainActor
 final class PlayerViewModel: ObservableObject {
     @Published var currentTrack: Track?
@@ -14,6 +25,14 @@ final class PlayerViewModel: ObservableObject {
     @Published var favoriteIDs: Set<String> = []
     @Published var isInitialLoading = true
     @Published private(set) var upNext: [Track] = []
+    @Published private(set) var moreLikeThisTrackID: String?
+    @Published private(set) var moodTransition: MoodTransition?
+
+    private enum QueueSizing {
+        static let visibleUpNextLimit = 4
+        static let targetUpcomingCount = 8
+        static let appendOnAdvanceCount = 1
+    }
 
     enum Sheet: Identifiable {
         case whyThis
@@ -134,7 +153,7 @@ final class PlayerViewModel: ObservableObject {
 
         audioService.onInterruptionEnded = { [weak self] in
             guard let self, let track = self.currentTrack else { return }
-            self.audioService.play(url: self.resolveAudioURL(for: track))
+            self.audioService.play(url: self.resolveAudioURL(for: track), transition: .fadeIn(0.35))
             self.audioService.updateNowPlaying(track: track)
         }
 
@@ -154,7 +173,7 @@ final class PlayerViewModel: ObservableObject {
         switch playbackState {
         case .idle:
             guard let track = currentTrack else { return }
-            surface(track)
+            surface(track, transition: .fadeIn(0.35))
         case .playing:
             audioService.pause()
         case .paused:
@@ -163,7 +182,7 @@ final class PlayerViewModel: ObservableObject {
             break
         case .failed:
             guard let track = currentTrack else { return }
-            surface(track)
+            surface(track, transition: .fadeIn(0.35))
         }
     }
 
@@ -180,8 +199,9 @@ final class PlayerViewModel: ObservableObject {
         }
 
         if let next = queue.skipToNext() {
-            surface(next)
-            upNext = queue.upcoming
+            surface(next, transition: .fadeOutIn(out: 0.55, in: 0.75))
+            publishUpNext()
+            refillStableQueueIfNeeded()
         } else {
             replaceQueueAndPlay()
         }
@@ -200,8 +220,9 @@ final class PlayerViewModel: ObservableObject {
         }
 
         if let next = queue.jumpTo(index: index) {
-            surface(next)
-            upNext = queue.upcoming
+            surface(next, transition: .fadeOutIn(out: 0.55, in: 0.75))
+            publishUpNext()
+            refillStableQueueIfNeeded(appending: index + 1)
         }
     }
 
@@ -219,6 +240,25 @@ final class PlayerViewModel: ObservableObject {
         LocalStore.saveFavorites(favoriteIDs)
     }
 
+    func moreLikeThis() {
+        guard let track = currentTrack else { return }
+        feedbackTracker.log(type: .moreLikeThis, trackID: track.id, selectedPillIDs: committedPills.map(\.id))
+        moreLikeThisTrackID = track.id
+        HapticFeedback.medium()
+
+        Task { @MainActor [weak self] in
+            guard let self else { return }
+            let context = self.makeContext()
+            let tracks = await self.queueService.generateQueue(context: context)
+            let keepCount = min(2, self.queue.upcomingCount)
+            let existing = Array(self.queue.upcoming.prefix(keepCount))
+            let replaceCount = max(0, QueueSizing.targetUpcomingCount - keepCount)
+            let fresh = Array(tracks.prefix(replaceCount))
+            self.queue.replaceUpcoming(existing + fresh)
+            self.publishUpNext()
+        }
+    }
+
     func togglePill(_ pill: Pill) {
         if draftPills.contains(pill) { draftPills.remove(pill) } else { draftPills.insert(pill) }
         HapticFeedback.selection()
@@ -227,11 +267,26 @@ final class PlayerViewModel: ObservableObject {
     func submitPrompt() { applyMood(startNow: true) }
 
     func applyMood(startNow: Bool = false) {
+        let fromSignature = MoodSignature(
+            pillIDs: committedPills.map(\.id).sorted(),
+            prompt: committedPrompt
+        )
         committedPills = draftPills
         committedPrompt = draftPrompt.trimmingCharacters(in: .whitespacesAndNewlines)
+        let toSignature = MoodSignature(
+            pillIDs: committedPills.map(\.id).sorted(),
+            prompt: committedPrompt
+        )
+        if fromSignature != toSignature {
+            moodTransition = MoodTransition(fromSignature: fromSignature, toSignature: toSignature, startedAt: Date())
+            DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) { [weak self] in
+                self?.moodTransition = nil
+            }
+        }
         LocalStore.saveLastPillIDs(committedPills.map(\.id))
         LocalStore.saveLastPrompt(committedPrompt.isEmpty ? nil : committedPrompt)
         SeenHistoryStore.clear()
+        moreLikeThisTrackID = nil
         if startNow { replaceQueueAndPlay() } else { refreshUpcoming() }
     }
 
@@ -254,9 +309,9 @@ final class PlayerViewModel: ObservableObject {
         return next
     }
 
-    private func surface(_ track: Track) {
+    private func surface(_ track: Track, transition: AudioTransition = .immediate) {
         currentTrack = track
-        audioService.play(url: resolveAudioURL(for: track))
+        audioService.play(url: resolveAudioURL(for: track), transition: transition)
         audioService.updateNowPlaying(track: track)
         feedbackTracker.log(type: .playStarted, trackID: track.id, selectedPillIDs: committedPills.map(\.id))
         SeenHistoryStore.record(track.id)
@@ -274,8 +329,28 @@ final class PlayerViewModel: ObservableObject {
             dislikedTrackIDs: [],
             favoriteTrackIDs: Array(favoriteIDs),
             recentlyPlayedTrackIDs: Array(Set(queue.history.map(\.id)).union(SeenHistoryStore.recentIDs)),
-            offlineTrackIDs: offlineTrackIDs
+            offlineTrackIDs: offlineTrackIDs,
+            similarToTrackID: moreLikeThisTrackID
         )
+    }
+
+    private func publishUpNext() {
+        upNext = Array(queue.upcoming.prefix(QueueSizing.visibleUpNextLimit))
+    }
+
+    private func refillStableQueueIfNeeded(appending neededCount: Int = QueueSizing.appendOnAdvanceCount) {
+        let deficit = max(0, QueueSizing.targetUpcomingCount - queue.upcomingCount)
+        let count = max(neededCount, deficit)
+        guard count > 0 else { return }
+
+        Task { @MainActor [weak self] in
+            guard let self else { return }
+            let context = self.makeContext()
+            let tracks = await self.queueService.generateQueue(context: context)
+            let limited = Array(tracks.prefix(count))
+            self.queue.appendTracks(limited)
+            self.publishUpNext()
+        }
     }
 
     private func replaceQueueAndPlay() {
@@ -289,9 +364,9 @@ final class PlayerViewModel: ObservableObject {
             self.queue = PlaybackQueue(tracks: tracks)
 
             if let first = self.queue.current {
-                self.surface(first)
+                self.surface(first, transition: .fadeOutIn(out: 0.9, in: 1.1))
             }
-            self.upNext = self.queue.upcoming
+            self.publishUpNext()
         }
     }
 
@@ -316,8 +391,9 @@ final class PlayerViewModel: ObservableObject {
         }
 
         if let next = queue.skipToNext() {
-            surface(next)
-            upNext = queue.upcoming
+            surface(next, transition: .fadeIn(0.35))
+            publishUpNext()
+            refillStableQueueIfNeeded()
         } else {
             currentTrack = nil
             refreshQueue()
@@ -333,12 +409,13 @@ final class PlayerViewModel: ObservableObject {
             guard let self else { return }
             let context = self.makeContext()
             let tracks = await self.queueService.generateQueue(context: context)
-            self.queue.appendTracks(tracks)
+            let limited = Array(tracks.prefix(QueueSizing.targetUpcomingCount))
+            self.queue.appendTracks(limited)
 
             if self.currentTrack == nil, let next = self.queue.skipToNext() {
                 self.currentTrack = next
             }
-            self.upNext = self.queue.upcoming
+            self.publishUpNext()
             self.isInitialLoading = false
         }
     }
@@ -348,7 +425,7 @@ final class PlayerViewModel: ObservableObject {
             guard let self else { return }
             let tracks = await self.queueService.generateQueue(context: self.makeContext())
             self.queue = PlaybackQueue(tracks: [self.currentTrack].compactMap { $0 } + tracks)
-            self.upNext = self.queue.upcoming
+            self.publishUpNext()
         }
     }
 

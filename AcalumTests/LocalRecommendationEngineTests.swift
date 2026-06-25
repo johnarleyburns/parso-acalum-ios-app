@@ -11,8 +11,10 @@ private final class FakeSearchService: LocalVectorSearchService {
     func search(query: Embedding512, limit: Int, excluding excludedTrackIDs: Set<String>) async throws -> [SearchResult] {
         results
             .filter { !excludedTrackIDs.contains($0.id) }
+            .map { SearchResult(track: $0, score: query.dot($0.clapVector), explanation: []) }
+            .sorted { $0.score > $1.score }
             .prefix(limit)
-            .map { SearchResult(track: $0, score: score, explanation: []) }
+            .map { $0 }
     }
 }
 
@@ -118,5 +120,72 @@ final class LocalRecommendationEngineTests: XCTestCase {
         let query = await engine.buildQueryVector(from: DiscoveryContext(prompt: nil))
         // Taste built from the single favorite is a unit vector along its direction.
         XCTAssertEqual(query.dot(fav.clapVector), 1.0, accuracy: 1e-4)
+    }
+
+    func testSimilarToTrackBiasesResultsTowardSeedVector() async {
+        let seed = recV("seed", direction: 7)
+        let nearSeed = recV("near", direction: 7)  // same direction
+        let far = recV("far", direction: 200)
+        let catalog = [seed, nearSeed, far]
+        let engine = makeEngine(catalog: catalog, searchService: FakeSearchService(results: catalog))
+
+        let context = DiscoveryContext(similarToTrackID: "seed")
+        let tracks = await engine.generateQueue(context: context)
+
+        // nearSeed should rank before far because it's closer to the seed
+        let ids = tracks.map(\.id)
+        guard let nearIdx = ids.firstIndex(of: "near"),
+              let farIdx = ids.firstIndex(of: "far") else {
+            XCTFail("Expected both near and far in results")
+            return
+        }
+        XCTAssertLessThan(nearIdx, farIdx, "near should rank before far")
+    }
+
+    func testSimilarToTrackStillRespectsMoodWhenMoodExists() async {
+        let seed = recV("seed", direction: 7)
+        let moodMatch = recV("mood_match", direction: 150)
+        let nearSeed = recV("near_seed", direction: 8)  // very close to seed
+        let catalog = [seed, moodMatch, nearSeed]
+
+        // Build an engine whose search service returns results presorted
+        let allSorted: [TrackVectorRecord] = [moodMatch, nearSeed, seed]
+        let engine = makeEngine(catalog: catalog, searchService: FakeSearchService(results: allSorted))
+
+        let piano = Pill(id: "instrument:piano", label: "Piano", category: .instrument, semanticPhrase: "solo piano")
+        let context = DiscoveryContext(
+            prompt: nil,
+            selectedPills: [piano],
+            recentlyPlayedTrackIDs: ["seed"],
+            similarToTrackID: "seed"
+        )
+        let tracks = await engine.generateQueue(context: context)
+
+        XCTAssertFalse(tracks.isEmpty)
+        // The seed track itself should be excluded as recently played
+        let ids = tracks.map(\.id)
+        XCTAssertFalse(ids.contains("seed"), "Seed should not appear in results")
+    }
+
+    func testSimilarToTrackExcludesRecentAndDisliked() async {
+        let seed = recV("seed", direction: 7)
+        let disliked = recV("disliked_match", direction: 6)
+        let recent = recV("recent_match", direction: 8)
+        let valid = recV("valid", direction: 50)
+        let catalog = [seed, disliked, recent, valid]
+
+        let engine = makeEngine(catalog: catalog, searchService: FakeSearchService(results: catalog))
+        let context = DiscoveryContext(
+            dislikedTrackIDs: ["disliked_match"],
+            recentlyPlayedTrackIDs: ["recent_match", "seed"],
+            similarToTrackID: "seed"
+        )
+        let tracks = await engine.generateQueue(context: context)
+        let ids = tracks.map(\.id)
+
+        XCTAssertFalse(ids.contains("disliked_match"), "Disliked track should be excluded")
+        XCTAssertFalse(ids.contains("recent_match"), "Recently played track should be excluded")
+        XCTAssertFalse(ids.contains("seed"), "Seed track itself should be excluded as recent")
+        XCTAssertTrue(ids.contains("valid"), "Valid track should appear")
     }
 }

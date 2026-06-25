@@ -6,6 +6,7 @@ struct PlaybackControlsView: View {
     let onFavorite: () -> Void
     let onPlayPause: () -> Void
     let onSkip: () -> Void
+    let onMoreLikeThis: (() -> Void)?
 
     var body: some View {
         HStack(spacing: AcalumSpacing.xxl) {
@@ -18,6 +19,19 @@ struct PlaybackControlsView: View {
                     .foregroundStyle(isFavorited ? .red : .primary)
             }
             .accessibilityLabel(isFavorited ? "Unfavorite" : "Favorite")
+
+            if let onMoreLikeThis {
+                Button {
+                    HapticFeedback.medium()
+                    onMoreLikeThis()
+                } label: {
+                    Image(systemName: "sparkles")
+                        .font(.title2)
+                        .foregroundStyle(.primary)
+                }
+                .accessibilityLabel("More like this")
+                .accessibilityHint("Finds upcoming tracks similar to the current track")
+            }
 
             Button {
                 HapticFeedback.light()

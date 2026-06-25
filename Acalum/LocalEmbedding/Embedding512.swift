@@ -55,4 +55,13 @@ struct Embedding512: Equatable, Codable {
         guard normA > 0, normB > 0 else { return 0 }
         return dot(other) / (normA * normB)
     }
+
+    func weightedAdding(_ other: Embedding512, selfWeight: Float, otherWeight: Float) -> Embedding512 {
+        var result = [Float](repeating: 0, count: Self.dimension)
+        var selfW = selfWeight
+        var otherW = otherWeight
+        vDSP_vsmul(values, 1, &selfW, &result, 1, vDSP_Length(Self.dimension))
+        vDSP_vsma(other.values, 1, &otherW, result, 1, &result, 1, vDSP_Length(Self.dimension))
+        return try! Embedding512(values: result)
+    }
 }

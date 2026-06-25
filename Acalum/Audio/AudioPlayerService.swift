@@ -4,6 +4,12 @@ import Foundation
 import MediaPlayer
 import os
 
+enum AudioTransition {
+    case immediate
+    case fadeOutIn(out: TimeInterval, `in`: TimeInterval)
+    case fadeIn(TimeInterval)
+}
+
 protocol AudioPlayerServiceProtocol: AnyObject {
     var statePublisher: AnyPublisher<PlaybackState, Never> { get }
     var currentTimePublisher: AnyPublisher<Double, Never> { get }
@@ -15,6 +21,7 @@ protocol AudioPlayerServiceProtocol: AnyObject {
     var onPlaybackFailed: (() -> Void)? { get set }
 
     func play(url: URL)
+    func play(url: URL, transition: AudioTransition)
     func pause()
     func resume()
     func stop()
@@ -29,6 +36,7 @@ final class AudioPlayerService: NSObject, AudioPlayerServiceProtocol, Observable
     private var itemDidEndObserver: NSObjectProtocol?
     private var interruptionObserver: NSObjectProtocol?
     private var routeChangeObserver: NSObjectProtocol?
+    private var fadeWorkItem: DispatchWorkItem?
 
     private let stateSubject = CurrentValueSubject<PlaybackState, Never>(.idle)
     private let currentTimeSubject = CurrentValueSubject<Double, Never>(0)
@@ -136,6 +144,25 @@ final class AudioPlayerService: NSObject, AudioPlayerServiceProtocol, Observable
     }
 
     func play(url: URL) {
+        play(url: url, transition: .immediate)
+    }
+
+    func play(url: URL, transition: AudioTransition) {
+        fadeWorkItem?.cancel()
+        fadeWorkItem = nil
+
+        switch transition {
+        case .immediate:
+            playImmediate(url: url)
+        case .fadeOutIn(let outDuration, let inDuration):
+            fadeOutThenPlay(url: url, outDuration: outDuration, inDuration: inDuration)
+        case .fadeIn(let inDuration):
+            stopCurrentAndPlay(url: url, initialVolume: 0.01)
+            rampVolume(to: 1.0, duration: inDuration)
+        }
+    }
+
+    private func playImmediate(url: URL) {
         os_log(.info, "AudioPlayer: play(url:) called with %{public}@", url.absoluteString)
         stop()
 
@@ -149,12 +176,80 @@ final class AudioPlayerService: NSObject, AudioPlayerServiceProtocol, Observable
 
         let item = AVPlayerItem(url: url)
         player = AVPlayer(playerItem: item)
+        player?.volume = 1.0
 
         observeItemStatus(item: item)
         observeTime()
         observeEnd()
 
         player?.play()
+    }
+
+    private func stopCurrentAndPlay(url: URL, initialVolume: Float) {
+        removeObservers()
+        player?.pause()
+        player = nil
+
+        do {
+            try AVAudioSession.sharedInstance().setActive(true)
+        } catch {
+            os_log(.error, "AudioPlayer: failed to reactivate audio session: %{public}@", error.localizedDescription)
+        }
+
+        stateSubject.send(.loading)
+
+        let item = AVPlayerItem(url: url)
+        player = AVPlayer(playerItem: item)
+        player?.volume = initialVolume
+
+        observeItemStatus(item: item)
+        observeTime()
+        observeEnd()
+
+        player?.play()
+    }
+
+    private func fadeOutThenPlay(url: URL, outDuration: TimeInterval, inDuration: TimeInterval) {
+        guard let currentPlayer = player else {
+            stopCurrentAndPlay(url: url, initialVolume: 0.01)
+            rampVolume(to: 1.0, duration: inDuration)
+            return
+        }
+
+        rampVolume(on: currentPlayer, to: 0, duration: outDuration)
+
+        let item = DispatchWorkItem { [weak self] in
+            guard let self else { return }
+            self.stopCurrentAndPlay(url: url, initialVolume: 0.01)
+            self.rampVolume(to: 1.0, duration: inDuration)
+        }
+        fadeWorkItem = item
+        DispatchQueue.main.asyncAfter(deadline: .now() + outDuration, execute: item)
+    }
+
+    private func rampVolume(on target: AVPlayer? = nil, to targetVolume: Float, duration: TimeInterval) {
+        let player = target ?? self.player
+        guard let player else { return }
+
+        let steps: Int = max(1, Int(duration / 0.05))
+        let startVolume = player.volume
+        let delta = (targetVolume - startVolume) / Float(steps)
+        let interval = duration / Double(steps)
+
+        for i in 0...steps {
+            let workItem = DispatchWorkItem { [weak player] in
+                guard let player else { return }
+                player.volume = startVolume + delta * Float(i)
+            }
+            if i == steps {
+                let finalItem = DispatchWorkItem { [weak player] in
+                    player?.volume = targetVolume
+                }
+                DispatchQueue.main.asyncAfter(deadline: .now() + interval * Double(i), execute: finalItem)
+            } else {
+                DispatchQueue.main.asyncAfter(deadline: .now() + interval * Double(i), execute: workItem)
+            }
+        }
     }
 
     func pause() {
@@ -169,6 +264,8 @@ final class AudioPlayerService: NSObject, AudioPlayerServiceProtocol, Observable
     }
 
     func stop() {
+        fadeWorkItem?.cancel()
+        fadeWorkItem = nil
         removeObservers()
         player?.pause()
         player = nil

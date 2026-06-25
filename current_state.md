@@ -2,7 +2,22 @@
 
 Live progress tracker for the Acalum iOS app.
 
-_Last updated: 2026-06-25 — "Why this track?" phrase-match section + acoustic-character cleanup._
+_Last updated: 2026-06-25 — More Like This, Stable Up Next, and Smooth Mood Transitions._
+
+## Repo / branch
+
+- Repo: `/Users/arley/github/parso-acalum-ios-app`
+- **`main`** = All features merged. Builds + runs clean.
+- Latest: `b78df3d` — explicit Info.plist with UIBackgroundModes array for background audio.
+
+## What just shipped
+
+### More Like This, Stable Up Next, and Smooth Mood Transitions
+- **Visible Up Next** now shows max 4 tracks (internal queue targets 8 for smooth playback). Normal skips/track completions preserve queue order and append only 1 track at the tail. Whole Up Next replacement only happens on explicit mood apply.
+- **"More like this" button** (sparkles icon) nudges future recommendations toward the current track via CLAP-vector blending (0.65 mood + 0.35 seed when mood exists, seed-only otherwise). Does not favorite or disrupt current playback. Clears on mood apply.
+- **Audio fade transitions:** manual skip/Up Next tap uses fade-out 0.55s + fade-in 0.75s; mood start-now uses longer fade-out 0.9s + fade-in 1.1s; natural completion uses fade-in 0.35s. AVPlayer volume ramps cancel on repeated skips.
+- **Mood transition graphic:** `MoodSignature` (pill IDs + prompt) drives a deterministic palette overlay on `AmbientArtworkView` during mood changes. Transitions in over 1.2s, fades out after 1.5s. Respects Reduce Motion (cross-dissolve only).
+- **RotationPlanner fix:** refill path now excludes seen tracks (was only checking disliked/chosen), closing a gap where recently played tracks could be re-recommended during queue starvation.
 
 ## Repo / branch
 
@@ -66,7 +81,7 @@ _Last updated: 2026-06-25 — "Why this track?" phrase-match section + acoustic-
 | `Recommendation/` | Done — scorer, calibrator, recommendation engine, rotation, feedback, taste vector |
 
 ## Tests
-19 test files under `AcalumTests/`. 118 tests, all green. New: `MoodMatchScorerTests` phrase-match cases (term presence, stopword filtering, verbatim phrase, empty prompt); earlier: `LexicalIndexTests`, `LocalRecommendationEngineTests` (lexical union, favorites-retained, intent-before-taste).
+19 test files under `AcalumTests/`. 134 tests, all green. New: `PlayerViewModelTests` (upNext visible limit, skip preserves queue, apply replaces queue, moreLikeThis seed/log/clear, fade transition types); `PlaybackQueueTests` (replaceUpcoming, trimUpcoming, containsTrack); `LocalRecommendationEngineTests` (similarToTrack biases, mood respect, exclude recent/disliked); `Embedding512Tests` (weightedAdding).
 
 ## Notes / decisions in effect
 - No accounts, no server dependency, offline-capable with downloads.

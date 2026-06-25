@@ -10,6 +10,7 @@ enum FeedbackEventType: String, Codable {
     case promptChanged
     case pillSelected
     case pillRemoved
+    case moreLikeThis
 }
 
 struct FeedbackEvent: Codable, Identifiable {

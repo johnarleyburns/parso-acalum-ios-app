@@ -5,13 +5,14 @@ struct PlayerHomeView: View {
     @State private var toastData: ToastData?
 
     var body: some View {
-        ScrollView {
+        ScrollView(.vertical, showsIndicators: true) {
             VStack(spacing: AcalumSpacing.lg) {
                 headerView
 
                 AmbientArtworkView(
                     track: viewModel.currentTrack,
-                    isPlaying: viewModel.isPlaying
+                    isPlaying: viewModel.isPlaying,
+                    moodTransition: viewModel.moodTransition
                 )
                 .padding(.horizontal, AcalumSpacing.xxl)
 
@@ -31,7 +32,8 @@ struct PlayerHomeView: View {
                         isFavorited: viewModel.isFavorited,
                         onFavorite: viewModel.toggleFavorite,
                         onPlayPause: viewModel.togglePlayPause,
-                        onSkip: viewModel.skip
+                        onSkip: viewModel.skip,
+                        onMoreLikeThis: { viewModel.moreLikeThis() }
                     )
                 }
 

@@ -71,4 +71,25 @@ final class Embedding512Tests: XCTestCase {
         let vec = try! Embedding512(values: values)
         XCTAssertEqual(vec.cosineSimilarity(to: .zero), 0.0)
     }
+
+    func testWeightedAddingEqualWeights() {
+        var valuesA = [Float](repeating: 0, count: 512)
+        var valuesB = [Float](repeating: 0, count: 512)
+        for i in 0..<512 {
+            valuesA[i] = Float(i % 17) - 8.0
+            valuesB[i] = Float(i % 13) - 6.0
+        }
+        let vecA = try! Embedding512(values: valuesA)
+        let vecB = try! Embedding512(values: valuesB)
+        let result = vecA.weightedAdding(vecB, selfWeight: 0.5, otherWeight: 0.5)
+        XCTAssertEqual(result.values.count, 512)
+    }
+
+    func testWeightedAddingSelfOnly() {
+        var values = [Float](repeating: 0, count: 512)
+        values[0] = 1.0
+        let vec = try! Embedding512(values: values)
+        let result = vec.weightedAdding(.zero, selfWeight: 1.0, otherWeight: 0.0)
+        XCTAssertEqual(result.dot(vec), 1.0, accuracy: 1e-4)
+    }
 }

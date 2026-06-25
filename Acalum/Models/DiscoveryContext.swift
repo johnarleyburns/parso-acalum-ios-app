@@ -7,4 +7,5 @@ struct DiscoveryContext: Codable, Equatable {
     var favoriteTrackIDs: [String] = []
     var recentlyPlayedTrackIDs: [String] = []
     var offlineTrackIDs: Set<String>?
+    var similarToTrackID: String?
 }

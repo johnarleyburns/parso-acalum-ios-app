@@ -45,6 +45,18 @@ struct PlaybackQueue {
         upcoming.append(contentsOf: newTracks)
     }
 
+    mutating func replaceUpcoming(_ tracks: [Track]) {
+        upcoming = tracks
+    }
+
+    mutating func trimUpcoming(to count: Int) {
+        upcoming = Array(upcoming.prefix(count))
+    }
+
+    func containsTrack(id: String) -> Bool {
+        current?.id == id || upcoming.contains(where: { $0.id == id })
+    }
+
     var isEmpty: Bool {
         current == nil && upcoming.isEmpty
     }

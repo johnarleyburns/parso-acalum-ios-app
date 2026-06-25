@@ -71,4 +71,40 @@ final class PlaybackQueueTests: XCTestCase {
         let result = queue.jumpTo(index: 999)
         XCTAssertNil(result)
     }
+
+    func testReplaceUpcomingKeepsCurrent() {
+        var queue = PlaybackQueue(tracks: MockData.tracks)
+        let originalCurrent = queue.current
+        let newTracks = Array(MockData.tracks.prefix(3))
+        queue.replaceUpcoming(newTracks)
+        XCTAssertEqual(queue.current?.id, originalCurrent?.id)
+        XCTAssertEqual(queue.upcomingCount, 3)
+    }
+
+    func testTrimUpcomingPreservesOrder() {
+        var queue = PlaybackQueue(tracks: MockData.tracks)
+        let originalFirstUpcoming = queue.upcoming.first
+        queue.trimUpcoming(to: 2)
+        XCTAssertEqual(queue.upcomingCount, 2)
+        XCTAssertEqual(queue.upcoming.first?.id, originalFirstUpcoming?.id)
+    }
+
+    func testContainsTrackFindsCurrent() {
+        let queue = PlaybackQueue(tracks: MockData.tracks)
+        XCTAssertTrue(queue.containsTrack(id: MockData.tracks.first!.id))
+    }
+
+    func testContainsTrackFindsUpcoming() {
+        let queue = PlaybackQueue(tracks: MockData.tracks)
+        guard let secondID = MockData.tracks.dropFirst().first?.id else {
+            XCTFail("Need at least two tracks")
+            return
+        }
+        XCTAssertTrue(queue.containsTrack(id: secondID))
+    }
+
+    func testContainsTrackReturnsFalseForUnknown() {
+        let queue = PlaybackQueue(tracks: MockData.tracks)
+        XCTAssertFalse(queue.containsTrack(id: "nonexistent"))
+    }
 }

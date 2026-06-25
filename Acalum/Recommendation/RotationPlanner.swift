@@ -12,7 +12,7 @@ struct RotationPlanner {
 
         var chosen = Set(eligible.map(\.id))
         var out = eligible
-        for t in refill() where !chosen.contains(t.id) && !disliked.contains(t.id) {
+        for t in refill() where !chosen.contains(t.id) && !disliked.contains(t.id) && !seen.contains(t.id) {
             out.append(t); chosen.insert(t.id)
             if out.count >= window { break }
         }

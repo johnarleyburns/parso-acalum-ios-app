@@ -5,6 +5,8 @@ struct UpNextListView: View {
     let hasNoStrongMatches: Bool
     let onTapTrack: ((Int) -> Void)?
 
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
             HStack {
@@ -43,11 +45,13 @@ struct UpNextListView: View {
                     .onTapGesture {
                         onTapTrack?(i)
                     }
+                    .transition(reduceMotion ? .opacity : .opacity.combined(with: .move(edge: .bottom)))
                 if track.id != tracks.last?.id {
                     Divider()
                 }
             }
         }
+        .animation(reduceMotion ? nil : .easeInOut(duration: 0.35), value: tracks.map(\.id))
     }
 }
 

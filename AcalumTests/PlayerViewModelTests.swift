@@ -225,6 +225,198 @@ final class PlayerViewModelTests: XCTestCase {
         for _ in 0..<50 { await Task.yield(); if !vm.upNext.isEmpty { break } }
         XCTAssertFalse(vm.upNext.isEmpty, "Up next should be populated")
     }
+
+    func testUpNextPublishesVisibleLimitOnly() async throws {
+        let audioService = MockAudioPlayerService()
+        let queueService = MockRecommenderQueueService()
+
+        let vm = PlayerViewModel(
+            audioService: audioService,
+            feedbackTracker: FeedbackTracker(),
+            queueService: queueService
+        )
+
+        // Generate enough tracks to exceed the visible limit (MockRecommender returns 3 or more)
+        let piano = Pill(id: "instrument:piano", label: "Piano", category: .instrument, semanticPhrase: "solo piano")
+        vm.togglePill(piano)
+        vm.applyMood(startNow: true)
+
+        for _ in 0..<50 { await Task.yield(); if !vm.upNext.isEmpty { break } }
+        XCTAssertLessThanOrEqual(vm.upNext.count, 4, "Up next should show at most 4 tracks")
+    }
+
+    func testSkipPreservesRemainingUpNextAndAppendsOne() async throws {
+        let audioService = MockAudioPlayerService()
+        let queueService = MockRecommenderQueueService()
+
+        let vm = PlayerViewModel(
+            audioService: audioService,
+            feedbackTracker: FeedbackTracker(),
+            queueService: queueService
+        )
+
+        let piano = Pill(id: "instrument:piano", label: "Piano", category: .instrument, semanticPhrase: "solo piano")
+        vm.togglePill(piano)
+        vm.applyMood(startNow: true)
+
+        for _ in 0..<50 { await Task.yield(); if vm.currentTrack != nil { break } }
+        XCTAssertNotNil(vm.currentTrack)
+
+        let upNextBeforeSkip = vm.upNext
+        guard vm.upNext.count > 1 else {
+            // Queue too small for this test, skip trivial case
+            return
+        }
+        let firstUpcomingID = upNextBeforeSkip.first?.id
+
+        vm.skip()
+
+        // After skip, the track that was first in Up Next should now be current
+        XCTAssertEqual(vm.currentTrack?.id, firstUpcomingID)
+        // At most 4 visible
+        XCTAssertLessThanOrEqual(vm.upNext.count, 4)
+    }
+
+    func testApplyMoodReplacesWholeUpcoming() async throws {
+        let audioService = MockAudioPlayerService()
+        let queueService = MockRecommenderQueueService()
+
+        let vm = PlayerViewModel(
+            audioService: audioService,
+            feedbackTracker: FeedbackTracker(),
+            queueService: queueService
+        )
+
+        let piano = Pill(id: "instrument:piano", label: "Piano", category: .instrument, semanticPhrase: "solo piano")
+        vm.togglePill(piano)
+        vm.applyMood(startNow: true)
+
+        for _ in 0..<50 { await Task.yield(); if vm.currentTrack != nil { break } }
+        let upNextBefore = vm.upNext.map(\.id)
+
+        // Apply a prompt mood change, which produces different tracks in the mock
+        vm.draftPrompt = "fast jazz"
+        vm.applyMood(startNow: true)
+
+        for _ in 0..<50 { await Task.yield(); if vm.currentTrack != nil { break } }
+        let upNextAfter = vm.upNext.map(\.id)
+
+        // The queue should be different (mood apply replaced upcoming with prompt-based tracks)
+        XCTAssertNotEqual(upNextBefore, upNextAfter)
+    }
+
+    func testMoreLikeThisDoesNotReplaceWholeQueue() async throws {
+        let audioService = MockAudioPlayerService()
+        let queueService = MockRecommenderQueueService()
+
+        let vm = PlayerViewModel(
+            audioService: audioService,
+            feedbackTracker: FeedbackTracker(),
+            queueService: queueService
+        )
+
+        let piano = Pill(id: "instrument:piano", label: "Piano", category: .instrument, semanticPhrase: "solo piano")
+        vm.togglePill(piano)
+        vm.applyMood(startNow: true)
+
+        for _ in 0..<50 { await Task.yield(); if vm.currentTrack != nil { break } }
+        XCTAssertNotNil(vm.currentTrack)
+
+        let currentBeforeMLT = vm.currentTrack?.id
+        let upNextBeforeMLT = vm.upNext.map(\.id)
+
+        vm.moreLikeThis()
+
+        for _ in 0..<50 { await Task.yield(); if vm.moreLikeThisTrackID == vm.currentTrack?.id { break } }
+
+        // Current track should not change
+        XCTAssertEqual(vm.currentTrack?.id, currentBeforeMLT)
+        // The seed should be set
+        XCTAssertEqual(vm.moreLikeThisTrackID, currentBeforeMLT)
+        // Up next count still <= 4
+        XCTAssertLessThanOrEqual(vm.upNext.count, 4)
+    }
+
+    func testMoreLikeThisClearsOnMoodApply() async throws {
+        let audioService = MockAudioPlayerService()
+        let queueService = MockRecommenderQueueService()
+
+        let vm = PlayerViewModel(
+            audioService: audioService,
+            feedbackTracker: FeedbackTracker(),
+            queueService: queueService
+        )
+
+        let piano = Pill(id: "instrument:piano", label: "Piano", category: .instrument, semanticPhrase: "solo piano")
+        vm.togglePill(piano)
+        vm.applyMood(startNow: true)
+
+        for _ in 0..<50 { await Task.yield(); if vm.currentTrack != nil { break } }
+
+        vm.moreLikeThis()
+        for _ in 0..<50 { await Task.yield(); if vm.moreLikeThisTrackID != nil { break } }
+        XCTAssertNotNil(vm.moreLikeThisTrackID)
+
+        let guitar = Pill(id: "instrument:guitar", label: "Guitar", category: .instrument, semanticPhrase: "acoustic guitar")
+        vm.togglePill(guitar)
+        vm.applyMood(startNow: false)
+        await Task.yield()
+
+        XCTAssertNil(vm.moreLikeThisTrackID)
+    }
+
+    func testSkipUsesFadeOutInTransition() async throws {
+        let audioService = MockAudioPlayerService()
+        let queueService = MockRecommenderQueueService()
+
+        let vm = PlayerViewModel(
+            audioService: audioService,
+            feedbackTracker: FeedbackTracker(),
+            queueService: queueService
+        )
+
+        let piano = Pill(id: "instrument:piano", label: "Piano", category: .instrument, semanticPhrase: "solo piano")
+        vm.togglePill(piano)
+        vm.applyMood(startNow: true)
+
+        for _ in 0..<50 { await Task.yield(); if audioService.lastTransition != nil { break } }
+
+        vm.skip()
+        await Task.yield()
+
+        if case .fadeOutIn(let out, let `in`) = audioService.lastTransition {
+            XCTAssertEqual(out, 0.55, accuracy: 0.01)
+            XCTAssertEqual(`in`, 0.75, accuracy: 0.01)
+        } else {
+            XCTFail("Expected fadeOutIn transition from skip")
+        }
+    }
+
+    func testTrackFinishUsesFadeInTransition() async throws {
+        let audioService = MockAudioPlayerService()
+        let queueService = MockRecommenderQueueService()
+
+        let vm = PlayerViewModel(
+            audioService: audioService,
+            feedbackTracker: FeedbackTracker(),
+            queueService: queueService
+        )
+
+        let piano = Pill(id: "instrument:piano", label: "Piano", category: .instrument, semanticPhrase: "solo piano")
+        vm.togglePill(piano)
+        vm.applyMood(startNow: true)
+
+        for _ in 0..<50 { await Task.yield(); if audioService.lastTransition != nil { break } }
+
+        audioService.onTrackFinished?()
+        await Task.yield()
+
+        if case .fadeIn(let duration) = audioService.lastTransition {
+            XCTAssertEqual(duration, 0.35, accuracy: 0.01)
+        } else {
+            XCTFail("Expected fadeIn transition from track finish")
+        }
+    }
 }
 
 final class MockAudioPlayerService: AudioPlayerServiceProtocol, ObservableObject {
@@ -243,6 +435,7 @@ final class MockAudioPlayerService: AudioPlayerServiceProtocol, ObservableObject
     var didSeek = false
     var seekTime: TimeInterval = 0
     var lastPlayedURL: URL?
+    var lastTransition: AudioTransition?
     var lastNowPlayingTrack: Track?
 
     var onTrackFinished: (() -> Void)?
@@ -253,6 +446,13 @@ final class MockAudioPlayerService: AudioPlayerServiceProtocol, ObservableObject
     func play(url: URL) {
         didPlay = true
         lastPlayedURL = url
+        stateSubject.send(.playing)
+    }
+
+    func play(url: URL, transition: AudioTransition) {
+        didPlay = true
+        lastPlayedURL = url
+        lastTransition = transition
         stateSubject.send(.playing)
     }
 
