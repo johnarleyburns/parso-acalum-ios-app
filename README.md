@@ -7,6 +7,7 @@ Users shape a single continuous stream via instrument/mood/context/era pills, fr
 ## Current Status
 
 - **v0.1.0** — Core player, mood matching, background audio, offline downloads, splash, app icon.
+- **Retrieval:** hybrid — lexical metadata match (curated `tags`/genres/title) unioned with CLAP cosine. Prompts and pills both drive retrieval; degrades to lexical (never random) when the CLAP text model is not bundled.
 - **Build:** Green on iOS 17+ simulator and device.
 - See [`current_state.md`](current_state.md) for detailed module status and recent changes.
 
@@ -50,7 +51,7 @@ xcodebuild -project Acalum.xcodeproj -scheme Acalum \
 | `Features/Discovery/` | Pill selector, prompt bar |
 | `Features/Settings/` | Settings sheet |
 | `LocalEmbedding/` | CLAP tokenizer, text embedding |
-| `LocalSearch/` | Cosine vector search |
+| `LocalSearch/` | Hybrid lexical + CLAP cosine retrieval |
 | `Models/` | Track, Pill, MoodMatch, DiscoveryContext |
 | `Persistence/` | LocalStore, SeenHistory, TasteProfile, Downloads |
 | `Recommendation/` | Mood scorer, calibrator, recommendation engine |

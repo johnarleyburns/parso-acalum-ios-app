@@ -55,12 +55,19 @@ struct AcalumApp: App {
         }
     }
 
+    private(set) static var semanticSearchAvailable = false
+
     private static func makeTextEmbeddingService() -> TextEmbeddingService? {
         do {
-            return try CLAPTextEmbeddingService()
+            let service = try CLAPTextEmbeddingService()
+            semanticSearchAvailable = true
+            os_log(.info, "CLAP text encoder bundled — semantic search ENABLED.")
+            return service
         } catch CLAPTextEmbeddingError.modelNotBundled {
+            os_log(.error, "CLAP text encoder NOT bundled — semantic search DISABLED, lexical-only. Run `make export-ios` in parso-ia-music-indexer.")
             return nil
         } catch {
+            os_log(.error, "CLAP text encoder failed to load (%@) — lexical-only.", error.localizedDescription)
             return nil
         }
     }

@@ -3,6 +3,8 @@ import os
 
 final class LocalRecommendationEngine: QueueServiceProtocol {
     private let catalog: [TrackVectorRecord]
+    private let catalogByID: [String: TrackVectorRecord]
+    private let lexicalIndex: LexicalIndex
     private let searchService: LocalVectorSearchService
     private let tasteBuilder: TasteVectorBuilder
     private let scorer: MoodMatchScorer
@@ -18,6 +20,11 @@ final class LocalRecommendationEngine: QueueServiceProtocol {
         textEmbedding: TextEmbeddingService? = nil
     ) {
         self.catalog = catalog
+        var byID: [String: TrackVectorRecord] = [:]
+        byID.reserveCapacity(catalog.count)
+        for record in catalog { byID[record.id] = record }
+        self.catalogByID = byID
+        self.lexicalIndex = LexicalIndex(catalog: catalog)
         self.searchService = searchService
         self.tasteBuilder = tasteBuilder
         self.scorer = scorer
@@ -27,32 +34,62 @@ final class LocalRecommendationEngine: QueueServiceProtocol {
 
     func generateQueue(context: DiscoveryContext) async -> [Track] {
         let query = await buildQueryVector(from: context)
+        let normalizedQuery = query.normalized()
         let favorites = Set(context.favoriteTrackIDs)
         let disliked = Set(context.dislikedTrackIDs)
         let seen = Set(context.recentlyPlayedTrackIDs)
 
         let k = SeenHistoryStore.capacity + planner.window + 50
-        let hardExclude = disliked.union(favorites)
+        let exclude = disliked
 
-        let raw: [SearchResult]
+        // Query terms drawn from explicit intent (prompt + pills).
+        let phrase = (context.prompt ?? "").lowercased()
+        let pillText = context.selectedPills
+            .map { $0.semanticPhrase.isEmpty ? $0.label : $0.semanticPhrase }
+            .joined(separator: " ")
+        let queryTerms = LexicalIndex.terms("\(phrase) \(pillText)")
+        let lexical = lexicalIndex.scores(queryTerms: queryTerms, phrase: phrase) // id -> [0,1]
+
+        // CLAP top-k. Degrade to the lexical channel if the search throws.
+        var clapByID: [String: Float] = [:]
         do {
-            let searchResults = try await searchService.search(query: query, limit: k, excluding: hardExclude)
-            if let offlineIDs = context.offlineTrackIDs {
-                raw = searchResults.filter { offlineIDs.contains($0.track.id) }
-            } else {
-                raw = searchResults
-            }
+            let vectorHits = try await searchService.search(query: query, limit: k, excluding: exclude)
+            clapByID = Dictionary(vectorHits.map { ($0.track.id, $0.score) }, uniquingKeysWith: { a, _ in a })
         } catch {
-            return []
+            clapByID = [:]
         }
 
-        let scored = raw
-            .map { scorer.score(record: $0.track, clap: $0.score, recentIDs: seen, pills: context.selectedPills) }
-            .sorted { $0.moodMatch.index > $1.moodMatch.index }
+        // Candidate union: everything CLAP surfaced + everything lexically matched.
+        let candidateIDs = Set(clapByID.keys).union(lexical.keys).subtracting(exclude)
+        struct Cand { let rec: TrackVectorRecord; let clap: Float; let lex: Float; let fused: Float }
+        var cands: [Cand] = candidateIDs.compactMap { id in
+            guard let rec = catalogByID[id] else { return nil }
+            let clap = clapByID[id] ?? normalizedQuery.dot(rec.clapVector) // compute for lexical-only hits
+            let lex  = lexical[id] ?? 0
+            let fused = lexical.isEmpty ? clap : 0.5 * clap + 0.5 * lex
+            return Cand(rec: rec, clap: clap, lex: lex, fused: fused)
+        }
+        cands.sort { $0.fused > $1.fused }
+        cands = Array(cands.prefix(k))
+
+        if let offlineIDs = context.offlineTrackIDs {
+            cands = cands.filter { offlineIDs.contains($0.rec.id) }
+        }
+
+        // Score with the TRUE clap cosine so the mood index keeps its calibrated meaning,
+        // then order the final queue by a blend of mood index and lexical match.
+        let lexByID = Dictionary(cands.map { ($0.rec.id, $0.lex) }, uniquingKeysWith: { a, _ in a })
+        let scored = cands
+            .map { scorer.score(record: $0.rec, clap: $0.clap, recentIDs: seen, pills: context.selectedPills) }
+            .sorted {
+                let a = 0.5 * (Float($0.moodMatch.index) / 100) + 0.5 * (lexByID[$0.record.id] ?? 0)
+                let b = 0.5 * (Float($1.moodMatch.index) / 100) + 0.5 * (lexByID[$1.record.id] ?? 0)
+                return a > b
+            }
 
         let planned = planner.plan(
             ranked: scored, seen: seen, disliked: disliked,
-            refill: { [weak self] in self?.catalogFiller(query: query, exclude: hardExclude, pills: context.selectedPills) ?? [] })
+            refill: { [weak self] in self?.catalogFiller(query: query, exclude: exclude, pills: context.selectedPills) ?? [] })
 
         var tracks = planned.map(mapToTrack)
         injectFavoriteRarely(&tracks, favorites: favorites)
@@ -104,22 +141,35 @@ final class LocalRecommendationEngine: QueueServiceProtocol {
     }
 
     func buildQueryVector(from context: DiscoveryContext) async -> Embedding512 {
-        if let prompt = context.prompt, !prompt.isEmpty,
-           let embedding = try? await textEmbedding?.embed(prompt: prompt, pills: context.selectedPills) {
+        let hasPrompt = !(context.prompt ?? "").isEmpty
+        let hasPills  = !context.selectedPills.isEmpty
+
+        // 1. Any explicit intent → embed it. QueryTextBuilder already turns pills into text
+        //    even when the prompt is empty, so pill-only selections get a real query vector.
+        if hasPrompt || hasPills,
+           let embedding = try? await textEmbedding?.embed(prompt: context.prompt ?? "", pills: context.selectedPills) {
             return embedding
         }
+        // 2. Only fall back to taste when the user expressed NO explicit intent.
+        if !hasPrompt && !hasPills {
+            if let taste = currentTasteVector() { return taste }
+        }
+        // 3. Neutral seed. With the hybrid lexical channel, the explicit query is still
+        //    carried even when this vector is weak, so a missing model is never random.
+        return catalog.randomElement()?.clapVector.normalized() ?? .zero
+    }
 
+    private func currentTasteVector() -> Embedding512? {
         let profileFavorites = TasteProfileStore.favoriteTrackIDs
         let profileCompleted = TasteProfileStore.completedTrackIDs
         let profileSkipped = TasteProfileStore.skippedTrackIDs
 
         if !profileFavorites.isEmpty || !profileCompleted.isEmpty || !profileSkipped.isEmpty {
-            let tasteVector = tasteBuilder.buildTasteVector(
+            if let tasteVector = tasteBuilder.buildTasteVector(
                 favoriteTrackIDs: profileFavorites,
                 completedTrackIDs: profileCompleted,
                 skippedTrackIDs: profileSkipped
-            )
-            if let tasteVector {
+            ) {
                 TasteProfileStore.cacheTasteVector(tasteVector.values)
                 return tasteVector
             }
@@ -130,21 +180,6 @@ final class LocalRecommendationEngine: QueueServiceProtocol {
             return tasteVector
         }
 
-        if !context.selectedPills.isEmpty {
-            let pillLabels = context.selectedPills.map { $0.label.lowercased() }
-            let matched = catalog.filter { record in
-                let title = record.title.lowercased()
-                return pillLabels.contains(where: { title.contains($0) })
-            }
-            if let seed = matched.randomElement() {
-                return seed.clapVector.normalized()
-            }
-        }
-
-        if let seed = catalog.randomElement() {
-            return seed.clapVector.normalized()
-        }
-
-        return .zero
+        return nil
     }
 }
