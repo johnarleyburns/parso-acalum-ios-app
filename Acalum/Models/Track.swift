@@ -21,4 +21,6 @@ struct TrackExplanation: Codable, Equatable {
     let matchedPills: [String]
     let similarityScore: Double?
     let userTasteScore: Double?
+    var matchedPhraseTerms: [String] = []
+    var phraseMatchedVerbatim: Bool = false
 }

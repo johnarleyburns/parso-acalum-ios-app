@@ -85,4 +85,36 @@ final class MoodMatchScorerTests: XCTestCase {
         let result = scorer.score(record: record, clap: 0.5, recentIDs: ["other_track"], pills: [])
         XCTAssertTrue(result.moodMatch.context.contains(where: { $0.starts(with: "Fresh") }))
     }
+
+    func testMatchedPhraseTermsContainPresentWordsOnly() {
+        let scorer = MoodMatchScorer()
+        let record = makeRecord(id: "t1", title: "Quiet Spanish Guitar")
+        let result = scorer.score(record: record, clap: 0.5, recentIDs: [], pills: [], prompt: "quiet trombone")
+        XCTAssertEqual(result.moodMatch.matchedPhraseTerms, ["quiet"])
+    }
+
+    func testMatchedPhraseTermsFilterStopwords() {
+        let scorer = MoodMatchScorer()
+        let record = makeRecord(id: "t1", title: "Quiet Spanish Guitar")
+        let result = scorer.score(record: record, clap: 0.5, recentIDs: [], pills: [], prompt: "the quiet guitar")
+        XCTAssertFalse(result.moodMatch.matchedPhraseTerms.contains("the"))
+        XCTAssertEqual(result.moodMatch.matchedPhraseTerms, ["quiet", "guitar"])
+    }
+
+    func testPhraseMatchedVerbatimWhenFullPhrasePresent() {
+        let scorer = MoodMatchScorer()
+        let record = makeRecord(id: "t1", title: "Quiet Spanish Guitar")
+        let hit = scorer.score(record: record, clap: 0.5, recentIDs: [], pills: [], prompt: "spanish guitar")
+        XCTAssertTrue(hit.moodMatch.phraseMatchedVerbatim)
+        let miss = scorer.score(record: record, clap: 0.5, recentIDs: [], pills: [], prompt: "guitar spanish")
+        XCTAssertFalse(miss.moodMatch.phraseMatchedVerbatim)
+    }
+
+    func testEmptyPromptProducesNoPhraseMatches() {
+        let scorer = MoodMatchScorer()
+        let record = makeRecord(id: "t1", title: "Quiet Spanish Guitar")
+        let result = scorer.score(record: record, clap: 0.5, recentIDs: [], pills: [], prompt: "")
+        XCTAssertTrue(result.moodMatch.matchedPhraseTerms.isEmpty)
+        XCTAssertFalse(result.moodMatch.phraseMatchedVerbatim)
+    }
 }

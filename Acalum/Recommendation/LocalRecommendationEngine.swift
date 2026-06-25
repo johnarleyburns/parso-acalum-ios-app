@@ -80,7 +80,7 @@ final class LocalRecommendationEngine: QueueServiceProtocol {
         // then order the final queue by a blend of mood index and lexical match.
         let lexByID = Dictionary(cands.map { ($0.rec.id, $0.lex) }, uniquingKeysWith: { a, _ in a })
         let scored = cands
-            .map { scorer.score(record: $0.rec, clap: $0.clap, recentIDs: seen, pills: context.selectedPills) }
+            .map { scorer.score(record: $0.rec, clap: $0.clap, recentIDs: seen, pills: context.selectedPills, prompt: context.prompt ?? "") }
             .sorted {
                 let a = 0.5 * (Float($0.moodMatch.index) / 100) + 0.5 * (lexByID[$0.record.id] ?? 0)
                 let b = 0.5 * (Float($1.moodMatch.index) / 100) + 0.5 * (lexByID[$1.record.id] ?? 0)
@@ -89,7 +89,7 @@ final class LocalRecommendationEngine: QueueServiceProtocol {
 
         let planned = planner.plan(
             ranked: scored, seen: seen, disliked: disliked,
-            refill: { [weak self] in self?.catalogFiller(query: query, exclude: exclude, pills: context.selectedPills) ?? [] })
+            refill: { [weak self] in self?.catalogFiller(query: query, exclude: exclude, pills: context.selectedPills, prompt: context.prompt ?? "") ?? [] })
 
         var tracks = planned.map(mapToTrack)
         injectFavoriteRarely(&tracks, favorites: favorites)
@@ -117,12 +117,12 @@ final class LocalRecommendationEngine: QueueServiceProtocol {
         tracks.insert(mapToTrack(st), at: min(2, tracks.count))
     }
 
-    private func catalogFiller(query: Embedding512, exclude: Set<String>, pills: [Pill]) -> [ScoredTrack] {
+    private func catalogFiller(query: Embedding512, exclude: Set<String>, pills: [Pill], prompt: String) -> [ScoredTrack] {
         let q = query.normalized()
         return catalog.lazy
             .filter { !exclude.contains($0.id) }
             .prefix(SeenHistoryStore.capacity + planner.window)
-            .map { scorer.score(record: $0, clap: q.dot($0.clapVector), recentIDs: [], pills: pills) }
+            .map { scorer.score(record: $0, clap: q.dot($0.clapVector), recentIDs: [], pills: pills, prompt: prompt) }
     }
 
     private func mapToTrack(_ s: ScoredTrack) -> Track {
@@ -135,8 +135,12 @@ final class LocalRecommendationEngine: QueueServiceProtocol {
             license: "Public Domain", year: nil,
             explanation: TrackExplanation(
                 reasons: s.moodMatch.components.map(\.label),
-                matchedPills: s.moodMatch.components.filter(\.matched).map(\.label),
-                similarityScore: Double(s.moodMatch.index) / 100, userTasteScore: nil),
+                matchedPills: s.moodMatch.components
+                    .filter { $0.matched && $0.label != MoodMatchScorer.acousticLabel }
+                    .map(\.label),
+                similarityScore: Double(s.moodMatch.index) / 100, userTasteScore: nil,
+                matchedPhraseTerms: s.moodMatch.matchedPhraseTerms,
+                phraseMatchedVerbatim: s.moodMatch.phraseMatchedVerbatim),
             moodMatch: s.moodMatch)
     }
 

@@ -26,6 +26,18 @@ struct WhyThisSheet: View {
                                     .foregroundStyle(.secondary)
                             }
                         }
+
+                        if !explanation.matchedPhraseTerms.isEmpty {
+                            Section("Matched your phrase") {
+                                Text(explanation.matchedPhraseTerms.joined(separator: ", "))
+                                    .foregroundStyle(.secondary)
+                                    .accessibilityLabel("Matched phrase words: \(explanation.matchedPhraseTerms.joined(separator: ", "))")
+                                if explanation.phraseMatchedVerbatim {
+                                    Label("Full phrase appears in metadata", systemImage: "text.quote")
+                                        .foregroundStyle(.secondary)
+                                }
+                            }
+                        }
                     }
 
                     Section("Source") {

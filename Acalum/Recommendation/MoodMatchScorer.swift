@@ -7,6 +7,8 @@ struct ScoredTrack {
 }
 
 struct MoodMatchScorer {
+    static let acousticLabel = "Acoustic character"
+
     var clapWeight: Float = 0.62
     var tagWeight: Float = 0.38
     let calibrator: MoodIndexCalibrator
@@ -17,7 +19,7 @@ struct MoodMatchScorer {
         self.calibrator = calibrator
     }
 
-    func score(record: TrackVectorRecord, clap: Float, recentIDs: Set<String>, pills: [Pill]) -> ScoredTrack {
+    func score(record: TrackVectorRecord, clap: Float, recentIDs: Set<String>, pills: [Pill], prompt: String = "") -> ScoredTrack {
         let text = searchable(record)
         var components: [MoodComponent] = []
         var matched = 0
@@ -42,11 +44,13 @@ struct MoodMatchScorer {
         let index = calibrator.index(raw)
 
         let acoustic = MoodComponent(
-            label: "Acoustic character",
+            label: Self.acousticLabel,
             detail: String(format: "cosine %.2f", clap),
             share: Int((clamp01(clap) * 100).rounded()),
             matched: clap >= 0.3)
         components.insert(acoustic, at: 0)
+
+        let (phraseTerms, phraseVerbatim) = phraseMatches(prompt: prompt, in: text)
 
         var context: [String] = []
         if !recentIDs.contains(record.id) {
@@ -58,7 +62,8 @@ struct MoodMatchScorer {
 
         return ScoredTrack(
             record: record,
-            moodMatch: MoodMatch(index: index, summary: summary(index), components: components, context: context))
+            moodMatch: MoodMatch(index: index, summary: summary(index), components: components, context: context,
+                                 matchedPhraseTerms: phraseTerms, phraseMatchedVerbatim: phraseVerbatim))
     }
 
     private func searchable(_ r: TrackVectorRecord) -> String {
@@ -74,6 +79,21 @@ struct MoodMatchScorer {
             .filter { !$0.isEmpty && !stop.contains($0) }
         guard !words.isEmpty else { return false }
         return words.contains { text.contains($0) }
+    }
+
+    private func phraseMatches(prompt: String, in text: String) -> (terms: [String], verbatim: Bool) {
+        let trimmed = prompt.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+        guard !trimmed.isEmpty else { return ([], false) }
+        var seen = Set<String>()
+        let matched = trimmed
+            .components(separatedBy: CharacterSet(charactersIn: " ,;"))
+            .filter { !$0.isEmpty && !stop.contains($0) }
+            .filter { word in
+                guard !seen.contains(word) else { return false }
+                seen.insert(word)
+                return text.contains(word)
+            }
+        return (matched, text.contains(trimmed))
     }
 
     private func summary(_ i: Int) -> String {

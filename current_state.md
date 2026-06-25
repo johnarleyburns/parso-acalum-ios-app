@@ -2,7 +2,7 @@
 
 Live progress tracker for the Acalum iOS app.
 
-_Last updated: 2026-06-25 — Hybrid lexical + CLAP retrieval; pills drive retrieval; observable model status._
+_Last updated: 2026-06-25 — "Why this track?" phrase-match section + acoustic-character cleanup._
 
 ## Repo / branch
 
@@ -11,6 +11,12 @@ _Last updated: 2026-06-25 — Hybrid lexical + CLAP retrieval; pills drive retri
 - Latest: `b78df3d` — explicit Info.plist with UIBackgroundModes array for background audio.
 
 ## What just shipped
+
+### "Why this track?" phrase matching + acoustic cleanup
+- `WhyThisSheet` now shows a **"Matched your phrase"** section when a freeform prompt is entered, listing which prompt words appear in the track's metadata, plus a "Full phrase appears in metadata" badge when the whole phrase is present verbatim.
+- `MoodMatchScorer.score` gained a `prompt` parameter; it tokenizes the prompt (stopwords filtered, like pill matching) and substring-matches each word against the same `searchable(record)` text used for pills. Display-only — the mood-index math is unchanged. New fields `matchedPhraseTerms` / `phraseMatchedVerbatim` flow through `MoodMatch` → `TrackExplanation` (defaulted, so DTO/mocks are unaffected).
+- **Cleanup:** the "Acoustic character" component no longer leaks into the "Matched pills" list (`mapToTrack` excludes `MoodMatchScorer.acousticLabel`).
+- _Note on matching channels:_ the prompt drives retrieval two ways — (1) semantic CLAP cosine over the whole phrase's meaning (one embedding, no per-word attribution; shown as "Acoustic character"), and (2) lexical word+phrase overlap in `LexicalIndex`. The new sheet section reflects the lexical word-level hits only.
 
 ### Hybrid lexical + CLAP retrieval (Recommendation fix)
 - **Root cause:** retrieval was 100% CLAP-vector cosine and ignored the metadata (`tags`, `genres`, `subjects`, `title`, `composer`) already loaded on each `TrackVectorRecord`. Pills never drove retrieval (only embedded when a prompt existed; taste vectors ran *before* pills); and a missing CLAP text model silently collapsed to random picks. Net effect: "Spanish Guitar", the Guitar pill, and "gregorian chant" surfaced none of the matching tracks.
@@ -60,7 +66,7 @@ _Last updated: 2026-06-25 — Hybrid lexical + CLAP retrieval; pills drive retri
 | `Recommendation/` | Done — scorer, calibrator, recommendation engine, rotation, feedback, taste vector |
 
 ## Tests
-19 test files under `AcalumTests/`. 113 tests, all green. New: `LexicalIndexTests`, `LocalRecommendationEngineTests` (lexical union, favorites-retained, intent-before-taste).
+19 test files under `AcalumTests/`. 118 tests, all green. New: `MoodMatchScorerTests` phrase-match cases (term presence, stopword filtering, verbatim phrase, empty prompt); earlier: `LexicalIndexTests`, `LocalRecommendationEngineTests` (lexical union, favorites-retained, intent-before-taste).
 
 ## Notes / decisions in effect
 - No accounts, no server dependency, offline-capable with downloads.

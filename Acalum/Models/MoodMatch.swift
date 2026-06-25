@@ -13,4 +13,6 @@ struct MoodMatch: Codable, Equatable {
     let summary: String
     let components: [MoodComponent]
     let context: [String]
+    var matchedPhraseTerms: [String] = []
+    var phraseMatchedVerbatim: Bool = false
 }
