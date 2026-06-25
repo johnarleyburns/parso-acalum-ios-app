@@ -2,15 +2,21 @@
 
 Live progress tracker for the Acalum iOS app.
 
-_Last updated: 2026-06-25 — More Like This, Stable Up Next, and Smooth Mood Transitions._
+_Last updated: 2026-06-25 — Inline why breakdown phrase-match display._
 
 ## Repo / branch
 
 - Repo: `/Users/arley/github/parso-acalum-ios-app`
 - **`main`** = All features merged. Builds + runs clean.
-- Latest: `b78df3d` — explicit Info.plist with UIBackgroundModes array for background audio.
+- Latest: inline `MatchDetailsView` phrase-match display fix.
 
 ## What just shipped
+
+### Inline why breakdown phrase-match display
+- The visible inline **"`summary` · why"** breakdown now renders the existing phrase-match metadata from `MoodMatch`: matched prompt words plus the "Full phrase appears in metadata" badge when applicable.
+- This closes the gap where phrase matching was computed by `MoodMatchScorer` and shown only in the older `WhyThisSheet`, while the player UI actually presented `MatchDetailsView`.
+- No scoring, retrieval, queueing, or mood-index behavior changed.
+- Verification: `MoodMatchScorerTests` focused suite passed (12 tests, 0 failures); simulator build passed.
 
 ### More Like This, Stable Up Next, and Smooth Mood Transitions
 - **Visible Up Next** now shows max 4 tracks (internal queue targets 8 for smooth playback). Normal skips/track completions preserve queue order and append only 1 track at the tail. Whole Up Next replacement only happens on explicit mood apply.

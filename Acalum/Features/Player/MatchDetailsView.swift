@@ -50,6 +50,24 @@ struct MatchDetailsView: View {
                         }
                     }
 
+                    if !match.matchedPhraseTerms.isEmpty {
+                        Divider()
+                        VStack(alignment: .leading, spacing: 6) {
+                            Label("Matched your phrase", systemImage: "text.quote")
+                                .font(.caption2.weight(.semibold))
+                                .foregroundStyle(.secondary)
+                            Text(match.matchedPhraseTerms.joined(separator: ", "))
+                                .font(.caption2)
+                                .foregroundStyle(.secondary)
+                                .accessibilityLabel("Matched phrase words: \(match.matchedPhraseTerms.joined(separator: ", "))")
+                            if match.phraseMatchedVerbatim {
+                                Label("Full phrase appears in metadata", systemImage: "checkmark.seal.fill")
+                                    .font(.caption2)
+                                    .foregroundStyle(.secondary)
+                            }
+                        }
+                    }
+
                     if !match.context.isEmpty {
                         Divider()
                         ForEach(match.context, id: \.self) { text in

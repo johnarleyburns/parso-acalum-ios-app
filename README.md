@@ -8,6 +8,7 @@ Users shape a single continuous stream via instrument/mood/context/era pills, fr
 
 - **v0.1.0** — Core player, mood matching, background audio, offline downloads, splash, app icon.
 - **Retrieval:** hybrid — lexical metadata match (curated `tags`/genres/title) unioned with CLAP cosine. Prompts and pills both drive retrieval; degrades to lexical (never random) when the CLAP text model is not bundled.
+- **Why breakdown:** inline match details show acoustic/tag components, freshness context, and matched prompt words when the phrase appears in track metadata.
 - **Build:** Green on iOS 17+ simulator and device.
 - See [`current_state.md`](current_state.md) for detailed module status and recent changes.
 
