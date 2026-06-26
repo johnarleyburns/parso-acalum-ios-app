@@ -2,15 +2,19 @@
 
 Live progress tracker for the Acalum iOS app.
 
-_Last updated: 2026-06-26 — Queue-generation race fix; listenability gate, catalog-backed discovery, Previous, IA links, fade fix._
+_Last updated: 2026-06-26 — Greyscale splash background; queue-generation race fix; listenability gate, catalog-backed discovery, Previous, IA links, fade fix._
 
 ## Repo / branch
 
 - Repo: `/Users/arley/github/parso-acalum-ios-app`
 - **`main`** = All features merged. Builds + runs clean.
-- Latest: queue-generation race fix on top of the listenability/discovery/playback overhaul.
+- Latest: greyscale splash background on top of the queue-generation race fix.
 
 ## What just shipped
+
+### Greyscale splash background
+
+Regenerated the splash asset from the original `sakurako.jpg` (3840×2158) via ImageMagick: greyscale → resize to height 2688 (iPhone splash height) → crop the rightmost 1242×2688 (right-edge anchored). Output written to `Assets.xcassets/splash.imageset/splash.jpg` (1242×2688, 8-bit grayscale). No code/`Contents.json` change — `SplashView`'s `Image("splash").scaledToFill()` and the MIKI Yoshihito (CC BY 2.0) credit remain valid.
 
 ### Queue-generation race fix
 
