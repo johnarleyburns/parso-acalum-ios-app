@@ -505,6 +505,56 @@ final class PlayerViewModelTests: XCTestCase {
             XCTFail("Expected previous-specific fadeOutIn transition")
         }
     }
+
+    /// Regression for the queue-generation race. The init `refreshQueue` task
+    /// and a subsequent `replaceQueueAndPlay` (Play now) both `await`
+    /// `generateQueue` and then mutate the shared queue. A stale `refreshQueue`
+    /// resuming *after* the authoritative replace used to append its tracks
+    /// onto the fresh queue and push a phantom Previous entry (the never-played
+    /// track it transiently set as current). The queue-generation token must
+    /// discard the superseded task.
+    ///
+    /// `NetworkMonitor(startMonitoring: false)` keeps NWPathMonitor from firing
+    /// a connectivity refresh mid-test, so the interleaving is deterministic:
+    /// call #1 is the init refresh, call #2 is Play now. We resolve the
+    /// authoritative replace (#2) first, then let the stale refresh (#1) resume.
+    func testStaleInitRefreshDoesNotClobberPlayNow() async throws {
+        let audioService = MockAudioPlayerService()
+        let gated = GatedQueueService()
+        let vm = PlayerViewModel(
+            audioService: audioService,
+            feedbackTracker: FeedbackTracker(),
+            queueService: gated,
+            networkMonitor: NetworkMonitor(startMonitoring: false)
+        )
+
+        // Let the init refreshQueue task reach its gated await → call #1.
+        for _ in 0..<50 { await Task.yield(); if gated.callCount >= 1 { break } }
+        XCTAssertEqual(gated.callCount, 1, "init refreshQueue should be the only call so far")
+
+        // User hits Play now before init finished → replaceQueueAndPlay → call #2.
+        vm.draftPills = [Pill(id: "sound:piano", label: "Piano", category: .sound,
+                              embeddingPhrase: "solo piano", metadataTerms: ["piano"])]
+        vm.applyMood(startNow: true)
+        for _ in 0..<50 { await Task.yield(); if gated.callCount >= 2 { break } }
+        XCTAssertEqual(gated.callCount, 2, "Play now should issue exactly one more generate call")
+
+        // Resolve the AUTHORITATIVE replace (call #2) first.
+        gated.release(call: 2)
+        for _ in 0..<100 { await Task.yield(); if vm.currentTrack?.id == "gen2_a" { break } }
+        XCTAssertEqual(vm.currentTrack?.id, "gen2_a", "Play-now result should be playing")
+        let upNextAfterReplace = vm.upNext.map(\.id)
+
+        // Now let the STALE init refreshQueue (call #1) resume — must be discarded.
+        gated.release(call: 1)
+        for _ in 0..<100 { await Task.yield() }
+
+        XCTAssertEqual(vm.currentTrack?.id, "gen2_a", "current track must stay the Play-now result")
+        XCTAssertEqual(vm.upNext.map(\.id), upNextAfterReplace, "stale refresh must not mutate the queue")
+        XCTAssertFalse(vm.upNext.map(\.id).contains { $0.hasPrefix("gen1") },
+                       "no stale-generation tracks should leak into the queue")
+        XCTAssertFalse(vm.canGoPrevious, "stale refresh must not push a phantom Previous entry")
+    }
 }
 
 final class MockAudioPlayerService: AudioPlayerServiceProtocol, ObservableObject {
@@ -612,5 +662,39 @@ final class MockRecommenderQueueService: QueueServiceProtocol {
         }
 
         return tracks
+    }
+}
+
+/// Queue service whose every `generateQueue` call suspends until the test
+/// releases it, returning tracks tagged by call order (`gen<call>_a/b/c`).
+/// Lets a test deterministically control the resume ordering of concurrent
+/// queue-generation tasks. Everything runs on the main actor at runtime (the
+/// VM and tests are `@MainActor`), so the plain stored state is accessed
+/// serially.
+final class GatedQueueService: QueueServiceProtocol {
+    private(set) var callCount = 0
+    private var released: [Bool] = []
+
+    private func ensureCapacity(_ call: Int) {
+        while released.count < call { released.append(false) }
+    }
+
+    func release(call: Int) {
+        ensureCapacity(call)
+        released[call - 1] = true
+    }
+
+    func generateQueue(context: DiscoveryContext) async -> [Track] {
+        callCount += 1
+        let call = callCount
+        ensureCapacity(call)
+        while released[call - 1] == false {
+            await Task.yield()
+        }
+        return [
+            MockRecommenderQueueService.makeTrack(id: "gen\(call)_a", title: "Gen \(call) A"),
+            MockRecommenderQueueService.makeTrack(id: "gen\(call)_b", title: "Gen \(call) B"),
+            MockRecommenderQueueService.makeTrack(id: "gen\(call)_c", title: "Gen \(call) C"),
+        ]
     }
 }

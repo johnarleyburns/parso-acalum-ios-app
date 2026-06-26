@@ -50,6 +50,12 @@ final class PlayerViewModel: ObservableObject {
     }
 
     private var queue: PlaybackQueue
+    /// Monotonic token guarding async queue (re)generation. Each authoritative
+    /// queue operation bumps it synchronously before awaiting; a task whose
+    /// captured token no longer matches has been superseded and must discard
+    /// its result instead of clobbering newer state. Prevents a stale
+    /// `refreshQueue`/refill from overwriting a later `replaceQueueAndPlay`.
+    private var queueGeneration = 0
     private let audioService: any AudioPlayerServiceProtocol
     private let feedbackTracker: FeedbackTracker
     private let queueService: QueueServiceProtocol
@@ -257,10 +263,12 @@ final class PlayerViewModel: ObservableObject {
         moreLikeThisTrackID = track.id
         HapticFeedback.medium()
 
+        let generation = beginQueueGeneration()
         Task { @MainActor [weak self] in
             guard let self else { return }
             let context = self.makeContext()
             let tracks = await self.queueService.generateQueue(context: context)
+            guard generation == self.queueGeneration else { return }
             let keepCount = min(2, self.queue.upcomingCount)
             let existing = Array(self.queue.upcoming.prefix(keepCount))
             let replaceCount = max(0, QueueSizing.targetUpcomingCount - keepCount)
@@ -395,10 +403,12 @@ final class PlayerViewModel: ObservableObject {
         let count = max(neededCount, deficit)
         guard count > 0 else { return }
 
+        let generation = queueGeneration
         Task { @MainActor [weak self] in
             guard let self else { return }
             let context = self.makeContext()
             let tracks = await self.queueService.generateQueue(context: context)
+            guard generation == self.queueGeneration else { return }
             let limited = Array(tracks.prefix(count))
             self.queue.appendTracks(limited)
             self.publishUpNext()
@@ -406,6 +416,7 @@ final class PlayerViewModel: ObservableObject {
     }
 
     private func replaceQueueAndPlay() {
+        let generation = beginQueueGeneration()
         let outgoing = currentTrack
         audioService.stop()
         currentTrack = nil
@@ -418,6 +429,7 @@ final class PlayerViewModel: ObservableObject {
             guard let self else { return }
             let context = self.makeContext()
             let tracks = await self.queueService.generateQueue(context: context)
+            guard generation == self.queueGeneration else { return }
             self.queue = PlaybackQueue(tracks: tracks)
 
             if let first = self.queue.current {
@@ -461,11 +473,21 @@ final class PlayerViewModel: ObservableObject {
         replaceQueueAndPlay()
     }
 
+    /// Starts a new authoritative queue generation, invalidating any async
+    /// queue task still in flight. Call synchronously before spawning the task.
+    @discardableResult
+    private func beginQueueGeneration() -> Int {
+        queueGeneration += 1
+        return queueGeneration
+    }
+
     private func refreshQueue() {
+        let generation = beginQueueGeneration()
         Task { @MainActor [weak self] in
             guard let self else { return }
             let context = self.makeContext()
             let tracks = await self.queueService.generateQueue(context: context)
+            guard generation == self.queueGeneration else { return }
             let limited = Array(tracks.prefix(QueueSizing.targetUpcomingCount))
             self.queue.appendTracks(limited)
 
@@ -478,9 +500,11 @@ final class PlayerViewModel: ObservableObject {
     }
 
     private func refreshUpcoming() {
+        let generation = beginQueueGeneration()
         Task { @MainActor [weak self] in
             guard let self else { return }
             let tracks = await self.queueService.generateQueue(context: self.makeContext())
+            guard generation == self.queueGeneration else { return }
             self.queue = PlaybackQueue(tracks: [self.currentTrack].compactMap { $0 } + tracks)
             self.publishUpNext()
         }

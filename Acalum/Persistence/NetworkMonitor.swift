@@ -8,13 +8,15 @@ final class NetworkMonitor: ObservableObject {
     private let monitor = NWPathMonitor()
     private let queue = DispatchQueue(label: "com.parso.acalum.network-monitor")
 
-    init() {
+    init(startMonitoring: Bool = true) {
         monitor.pathUpdateHandler = { [weak self] path in
             DispatchQueue.main.async {
                 self?.isConnected = path.status == .satisfied
             }
         }
-        monitor.start(queue: queue)
+        if startMonitoring {
+            monitor.start(queue: queue)
+        }
     }
 
     deinit {

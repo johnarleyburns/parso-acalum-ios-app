@@ -2,15 +2,23 @@
 
 Live progress tracker for the Acalum iOS app.
 
-_Last updated: 2026-06-26 — Listenability gate, catalog-backed discovery, Previous, IA links, fade fix._
+_Last updated: 2026-06-26 — Queue-generation race fix; listenability gate, catalog-backed discovery, Previous, IA links, fade fix._
 
 ## Repo / branch
 
 - Repo: `/Users/arley/github/parso-acalum-ios-app`
 - **`main`** = All features merged. Builds + runs clean.
-- Latest: listenability/discovery/playback overhaul (`ACALUM_LISTENABILITY_DISCOVERY_PLAN.md`).
+- Latest: queue-generation race fix on top of the listenability/discovery/playback overhaul.
 
 ## What just shipped
+
+### Queue-generation race fix
+
+`PlayerViewModel`'s async queue methods each spawn a task that `await`s `generateQueue` and then mutates the shared queue, so a stale task could resume *after* a newer operation and clobber it — the init `refreshQueue` could append onto a fresh Play-now queue and push a phantom Previous entry (a track that was only transiently surfaced).
+
+- Added a monotonic `queueGeneration` token. Authoritative ops (`refreshQueue`, `replaceQueueAndPlay`, `refreshUpcoming`, `moreLikeThis`) call `beginQueueGeneration()` synchronously before spawning; the incremental `refillStableQueueIfNeeded` captures the current token without bumping. Every task re-checks `guard generation == queueGeneration` after its `await` and discards its result if superseded. Chosen over task cancellation because it's correct regardless of whether `generateQueue` is cooperatively cancellable.
+- Added a non-invasive test seam: `NetworkMonitor(startMonitoring:)` (defaults `true`; production unchanged) so `NWPathMonitor`'s unpredictable one-shot can't fire a mid-test refresh.
+- New deterministic regression test `testStaleInitRefreshDoesNotClobberPlayNow` with a `GatedQueueService` (suspends each `generateQueue` until released, tags tracks by call order). Verified it **fails without the guard** (stale refresh pollutes `upNext` with `gen1_*` tracks) and passes with it. Suite now **155** tests, all green.
 
 ### Listenability, Discovery, and Playback overhaul
 
@@ -103,7 +111,7 @@ Verification: full build **green**; **154** tests pass (added/updated `LocalData
 | `Recommendation/` | Done — scorer, calibrator, recommendation engine, rotation, feedback, taste vector |
 
 ## Tests
-21 test files under `AcalumTests/`. 154 tests, all green. New since prior: `PlaybackHistoryStoreTests` (LIFO/dedup/capacity/persistence), listenability cases in `LocalDatabaseTests`, strict-metadata + generic-word cases in `MoodMatchScorerTests`, listenability ranking/Fit-isolation in `LocalRecommendationEngineTests`, Previous behavior + non-interrupting prompt in `PlayerViewModelTests`.
+21 test files under `AcalumTests/`. 155 tests, all green. New since prior: `testStaleInitRefreshDoesNotClobberPlayNow` (queue-generation race regression, with a gated queue service); `PlaybackHistoryStoreTests` (LIFO/dedup/capacity/persistence), listenability cases in `LocalDatabaseTests`, strict-metadata + generic-word cases in `MoodMatchScorerTests`, listenability ranking/Fit-isolation in `LocalRecommendationEngineTests`, Previous behavior + non-interrupting prompt in `PlayerViewModelTests`.
 
 ## Notes / decisions in effect
 - No accounts, no server dependency, offline-capable with downloads.
