@@ -63,17 +63,67 @@ final class LocalDatabase {
         sqlite3_close(db)
     }
 
+    /// Whether the most recent `loadTracks()` found the indexer's listenability
+    /// columns and applied the default-stream filter. Old DBs report `false`.
+    private(set) var listenabilityFilteringEnabled = false
+
+    /// Detects the indexer's listenability schema via `PRAGMA table_info`.
+    /// The checked app resource can be stale before the pre-build copy runs, so
+    /// we never assume the columns exist.
+    func hasListenabilityColumns() -> Bool {
+        var stmt: OpaquePointer?
+        guard sqlite3_prepare_v2(db, "PRAGMA table_info('tracks')", -1, &stmt, nil) == SQLITE_OK else {
+            return false
+        }
+        defer { sqlite3_finalize(stmt) }
+        var found = Set<String>()
+        while sqlite3_step(stmt) == SQLITE_ROW {
+            if let namePtr = sqlite3_column_text(stmt, 1) {
+                found.insert(String(cString: namePtr))
+            }
+        }
+        return found.contains("listenability_decision") && found.contains("listenability_stream")
+    }
+
     func loadTracks() throws -> [TrackVectorRecord] {
+        let hasListenability = hasListenabilityColumns()
+        listenabilityFilteringEnabled = hasListenability
+
+        let listenabilitySelect = hasListenability
+            ? """
+            ,
+                   t.listenability_score, t.listenability_tier,
+                   t.listenability_decision, t.listenability_stream,
+                   t.listenability_reasons, t.listenability_components
+            """
+            : ""
+
+        // Default stream gate: completed, indexer-included, default stream only.
+        // Longform candidates and excluded rows never enter the default catalog.
+        let listenabilityWhere = hasListenability
+            ? """
+
+              AND t.listenability_decision = 'include'
+              AND t.listenability_stream = 'default'
+            """
+            : ""
+
         let sql = """
             SELECT t.id, t.title, t.duration, t.download_url,
                    a.ia_identifier, a.title AS album_title, a.creator, a.art_url,
                    te.clap,
-                   t.tags, a.subjects, a.genres
+                   t.tags, a.subjects, a.genres\(listenabilitySelect)
             FROM tracks t
             JOIN albums a ON t.album_id = a.ia_identifier
             JOIN track_embeddings te ON t.id = te.track_id
-            WHERE t.status = 'completed'
+            WHERE t.status = 'completed'\(listenabilityWhere)
             """
+
+        if hasListenability {
+            os_log(.info, "LocalDatabase: listenability columns present — filtering to include/default stream")
+        } else {
+            os_log(.info, "LocalDatabase: listenability columns absent — loading without listenability filter (old DB fallback)")
+        }
 
         var stmt: OpaquePointer?
         guard sqlite3_prepare_v2(db, sql, -1, &stmt, nil) == SQLITE_OK else {
@@ -82,7 +132,7 @@ final class LocalDatabase {
         defer { sqlite3_finalize(stmt) }
 
         var records: [TrackVectorRecord] = []
-        records.reserveCapacity(8000)
+        records.reserveCapacity(hasListenability ? 16000 : 8000)
 
         while sqlite3_step(stmt) == SQLITE_ROW {
             let trackID = Int(sqlite3_column_int64(stmt, 0))
@@ -127,6 +177,24 @@ final class LocalDatabase {
             let albumGenres: String? = sqlite3_column_text(stmt, 11)
                 .map { String(cString: $0) }
 
+            var listenScore: Double?
+            var listenTier: String?
+            var listenDecision: String?
+            var listenStream: String?
+            var listenReasons: [String] = []
+            var listenComponents: [String: Double] = [:]
+
+            if hasListenability {
+                if sqlite3_column_type(stmt, 12) != SQLITE_NULL {
+                    listenScore = sqlite3_column_double(stmt, 12)
+                }
+                listenTier = sqlite3_column_text(stmt, 13).map { String(cString: $0) }
+                listenDecision = sqlite3_column_text(stmt, 14).map { String(cString: $0) }
+                listenStream = sqlite3_column_text(stmt, 15).map { String(cString: $0) }
+                listenReasons = Self.decodeStringArray(sqlite3_column_text(stmt, 16).map { String(cString: $0) })
+                listenComponents = Self.decodeDoubleMap(sqlite3_column_text(stmt, 17).map { String(cString: $0) })
+            }
+
             records.append(TrackVectorRecord(
                 id: String(trackID),
                 title: title,
@@ -140,10 +208,28 @@ final class LocalDatabase {
                 durationSeconds: duration > 0 ? duration : nil,
                 sourceURL: sourceURL,
                 audioURL: downloadURL,
-                artURL: artURL
+                artURL: artURL,
+                listenabilityScore: listenScore,
+                listenabilityTier: listenTier,
+                listenabilityDecision: listenDecision,
+                listenabilityStream: listenStream,
+                listenabilityReasons: listenReasons,
+                listenabilityComponents: listenComponents
             ))
         }
 
         return records
+    }
+
+    /// Parses an indexer JSON array of strings, e.g. `["has_audio_url"]`.
+    private static func decodeStringArray(_ json: String?) -> [String] {
+        guard let json, let data = json.data(using: .utf8) else { return [] }
+        return (try? JSONDecoder().decode([String].self, from: data)) ?? []
+    }
+
+    /// Parses an indexer JSON object of doubles, e.g. `{"duration":1,"album_shape":0.84}`.
+    private static func decodeDoubleMap(_ json: String?) -> [String: Double] {
+        guard let json, let data = json.data(using: .utf8) else { return [:] }
+        return (try? JSONDecoder().decode([String: Double].self, from: data)) ?? [:]
     }
 }

@@ -22,23 +22,36 @@ struct MoodMatchScorer {
     func score(record: TrackVectorRecord, clap: Float, recentIDs: Set<String>, pills: [Pill], prompt: String = "") -> ScoredTrack {
         let text = searchable(record)
         var components: [MoodComponent] = []
-        var matched = 0
+
+        // Only metadata-capable pills can assert a literal "tag present" match and
+        // contribute to the tag ratio. Listening-mode pills shape direction via CLAP
+        // but never claim a metadata match.
+        let metadataPills = pills.filter(\.hasMetadataTerms)
+        var matchedMetadata = 0
 
         for pill in pills {
-            let hit = pillMatched(pill, in: text)
-            if hit { matched += 1 }
+            let detail: String
+            let hit: Bool
+            if pill.hasMetadataTerms {
+                hit = pillMatched(pill, in: text)
+                if hit { matchedMetadata += 1 }
+                detail = hit ? "tag present" : "not tagged"
+            } else {
+                hit = false
+                detail = "shapes direction"
+            }
             components.append(MoodComponent(
-                label: "\(pill.category.rawValue.capitalized): \(pill.label)",
-                detail: hit ? "tag present" : "not tagged",
+                label: "\(pill.category.displayName): \(pill.label)",
+                detail: detail,
                 share: hit ? 100 : 0,
                 matched: hit))
         }
 
         let raw: Float
-        if pills.isEmpty {
+        if metadataPills.isEmpty {
             raw = clamp01(clap)
         } else {
-            let tagRatio = Float(matched) / Float(pills.count)
+            let tagRatio = Float(matchedMetadata) / Float(metadataPills.count)
             raw = clamp01(clapWeight * clamp01(clap) * max(tagRatio, 0.15) + tagWeight * tagRatio)
         }
         let index = calibrator.index(raw)
@@ -57,7 +70,7 @@ struct MoodMatchScorer {
             context.append("Fresh — not played in your last \(SeenHistoryStore.capacity)")
         }
         if pills.isEmpty {
-            context.append("No mood selected — picks are catalog-fresh")
+            context.append("No direction set — picks are catalog-fresh")
         }
 
         return ScoredTrack(
@@ -73,12 +86,11 @@ struct MoodMatchScorer {
     }
 
     private func pillMatched(_ pill: Pill, in text: String) -> Bool {
-        let phrase = pill.semanticPhrase.isEmpty ? pill.label : pill.semanticPhrase
-        let words = phrase.lowercased()
-            .components(separatedBy: CharacterSet(charactersIn: " ,;"))
-            .filter { !$0.isEmpty && !stop.contains($0) }
-        guard !words.isEmpty else { return false }
-        return words.contains { text.contains($0) }
+        let terms = pill.metadataTerms.map { $0.lowercased() }.filter { !$0.isEmpty }
+        guard !terms.isEmpty else { return false }
+        let negatives = pill.negativeTerms.map { $0.lowercased() }.filter { !$0.isEmpty }
+        if negatives.contains(where: { text.contains($0) }) { return false }
+        return terms.contains { text.contains($0) }
     }
 
     private func phraseMatches(prompt: String, in text: String) -> (terms: [String], verbatim: Bool) {
@@ -98,11 +110,11 @@ struct MoodMatchScorer {
 
     private func summary(_ i: Int) -> String {
         switch i {
-        case 80...:  return "Strong acoustic + mood match"
-        case 55..<80: return "Good acoustic match, partial mood"
-        case 40..<55: return "Related feeling, looser fit"
+        case 80...:  return "Strong fit"
+        case 55..<80: return "Good fit, partial match"
+        case 40..<55: return "Related direction, looser fit"
         case 20..<40: return "Loosely related — fresh pick"
-        default:      return "Fresh — outside the current mood"
+        default:      return "Fresh — outside the current direction"
         }
     }
 

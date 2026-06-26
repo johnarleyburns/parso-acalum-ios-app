@@ -16,6 +16,8 @@ protocol AudioPlayerServiceProtocol: AnyObject {
     var durationPublisher: AnyPublisher<Double, Never> { get }
 
     var onTrackFinished: (() -> Void)? { get set }
+    var onSkipRequested: (() -> Void)? { get set }
+    var onPreviousRequested: (() -> Bool)? { get set }
     var onInterruptionBegan: (() -> Void)? { get set }
     var onInterruptionEnded: (() -> Void)? { get set }
     var onPlaybackFailed: (() -> Void)? { get set }
@@ -37,6 +39,7 @@ final class AudioPlayerService: NSObject, AudioPlayerServiceProtocol, Observable
     private var interruptionObserver: NSObjectProtocol?
     private var routeChangeObserver: NSObjectProtocol?
     private var fadeWorkItem: DispatchWorkItem?
+    private var volumeRampWorkItems: [DispatchWorkItem] = []
 
     private let stateSubject = CurrentValueSubject<PlaybackState, Never>(.idle)
     private let currentTimeSubject = CurrentValueSubject<Double, Never>(0)
@@ -47,6 +50,8 @@ final class AudioPlayerService: NSObject, AudioPlayerServiceProtocol, Observable
     var durationPublisher: AnyPublisher<Double, Never> { durationSubject.eraseToAnyPublisher() }
 
     var onTrackFinished: (() -> Void)?
+    var onSkipRequested: (() -> Void)?
+    var onPreviousRequested: (() -> Bool)?
     var onInterruptionBegan: (() -> Void)?
     var onInterruptionEnded: (() -> Void)?
     var onPlaybackFailed: (() -> Void)?
@@ -89,11 +94,19 @@ final class AudioPlayerService: NSObject, AudioPlayerServiceProtocol, Observable
         }
         center.nextTrackCommand.isEnabled = true
         center.nextTrackCommand.addTarget { [weak self] _ in
-            self?.onTrackFinished?()
+            // Lock-screen Next uses skip semantics (logs a skip), not completion.
+            if let onSkip = self?.onSkipRequested {
+                onSkip()
+            } else {
+                self?.onTrackFinished?()
+            }
             return .success
         }
         center.previousTrackCommand.isEnabled = true
-        center.previousTrackCommand.addTarget { _ in .success }
+        center.previousTrackCommand.addTarget { [weak self] _ in
+            guard let onPrevious = self?.onPreviousRequested else { return .noSuchContent }
+            return onPrevious() ? .success : .noSuchContent
+        }
         center.changePlaybackPositionCommand.isEnabled = true
         center.changePlaybackPositionCommand.addTarget { [weak self] event in
             guard let event = event as? MPChangePlaybackPositionCommandEvent,
@@ -148,8 +161,9 @@ final class AudioPlayerService: NSObject, AudioPlayerServiceProtocol, Observable
     }
 
     func play(url: URL, transition: AudioTransition) {
-        fadeWorkItem?.cancel()
-        fadeWorkItem = nil
+        // Cancel every scheduled fade/ramp work item before starting a new
+        // transition so stale ramps can't mutate the next player's volume.
+        cancelScheduledFades()
 
         switch transition {
         case .immediate:
@@ -237,19 +251,22 @@ final class AudioPlayerService: NSObject, AudioPlayerServiceProtocol, Observable
         let interval = duration / Double(steps)
 
         for i in 0...steps {
+            let isFinal = (i == steps)
             let workItem = DispatchWorkItem { [weak player] in
                 guard let player else { return }
-                player.volume = startVolume + delta * Float(i)
+                player.volume = isFinal ? targetVolume : startVolume + delta * Float(i)
             }
-            if i == steps {
-                let finalItem = DispatchWorkItem { [weak player] in
-                    player?.volume = targetVolume
-                }
-                DispatchQueue.main.asyncAfter(deadline: .now() + interval * Double(i), execute: finalItem)
-            } else {
-                DispatchQueue.main.asyncAfter(deadline: .now() + interval * Double(i), execute: workItem)
-            }
+            volumeRampWorkItems.append(workItem)
+            DispatchQueue.main.asyncAfter(deadline: .now() + interval * Double(i), execute: workItem)
         }
+    }
+
+    /// Cancels and clears every scheduled fade and volume-ramp work item.
+    private func cancelScheduledFades() {
+        fadeWorkItem?.cancel()
+        fadeWorkItem = nil
+        for item in volumeRampWorkItems { item.cancel() }
+        volumeRampWorkItems.removeAll()
     }
 
     func pause() {
@@ -264,8 +281,7 @@ final class AudioPlayerService: NSObject, AudioPlayerServiceProtocol, Observable
     }
 
     func stop() {
-        fadeWorkItem?.cancel()
-        fadeWorkItem = nil
+        cancelScheduledFades()
         removeObservers()
         player?.pause()
         player = nil

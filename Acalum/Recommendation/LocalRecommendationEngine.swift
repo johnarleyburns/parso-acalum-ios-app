@@ -54,10 +54,12 @@ final class LocalRecommendationEngine: QueueServiceProtocol {
         let k = SeenHistoryStore.capacity + planner.window + 50
         let exclude = disliked
 
-        // Query terms drawn from explicit intent (prompt + pills).
+        // Query terms drawn from explicit intent (prompt + pills). Pills contribute
+        // their strict metadata terms and label — not the generic embedding phrase —
+        // so words like "music" or "background" don't pollute lexical retrieval.
         let phrase = (context.prompt ?? "").lowercased()
         let pillText = context.selectedPills
-            .map { $0.semanticPhrase.isEmpty ? $0.label : $0.semanticPhrase }
+            .map { ($0.metadataTerms + [$0.label]).joined(separator: " ") }
             .joined(separator: " ")
         let queryTerms = LexicalIndex.terms("\(phrase) \(pillText)")
         let lexical = lexicalIndex.scores(queryTerms: queryTerms, phrase: phrase) // id -> [0,1]
@@ -88,16 +90,24 @@ final class LocalRecommendationEngine: QueueServiceProtocol {
             cands = cands.filter { offlineIDs.contains($0.rec.id) }
         }
 
-        // Score with the TRUE clap cosine so the mood index keeps its calibrated meaning,
-        // then order the final queue by a blend of mood index and lexical match.
+        // Score with the TRUE clap cosine so the Fit index keeps its calibrated meaning,
+        // then order the final queue by a blend of Fit, lexical match, and listenability.
+        // Listenability is a ranking nudge only — it never enters the displayed Fit index.
+        let hasExplicitIntent = hasMood || context.similarToTrackID != nil
+        // Promptless/taste-only mode leans a little more on listenability as a tie-break.
+        let wFit: Float = hasExplicitIntent ? 0.50 : 0.45
+        let wLex: Float = hasExplicitIntent ? 0.30 : 0.25
+        let wListen: Float = hasExplicitIntent ? 0.20 : 0.30
         let lexByID = Dictionary(cands.map { ($0.rec.id, $0.lex) }, uniquingKeysWith: { a, _ in a })
+        func orderingScore(_ s: ScoredTrack) -> Float {
+            let fit = Float(s.moodMatch.index) / 100
+            let lex = lexByID[s.record.id] ?? 0
+            let listen = Float(s.record.listenabilityScore ?? 0.50)
+            return wFit * fit + wLex * lex + wListen * listen
+        }
         let scored = cands
             .map { scorer.score(record: $0.rec, clap: $0.clap, recentIDs: seen, pills: context.selectedPills, prompt: context.prompt ?? "") }
-            .sorted {
-                let a = 0.5 * (Float($0.moodMatch.index) / 100) + 0.5 * (lexByID[$0.record.id] ?? 0)
-                let b = 0.5 * (Float($1.moodMatch.index) / 100) + 0.5 * (lexByID[$1.record.id] ?? 0)
-                return a > b
-            }
+            .sorted { orderingScore($0) > orderingScore($1) }
 
         let planned = planner.plan(
             ranked: scored, seen: seen, disliked: disliked,
@@ -153,7 +163,19 @@ final class LocalRecommendationEngine: QueueServiceProtocol {
                 similarityScore: Double(s.moodMatch.index) / 100, userTasteScore: nil,
                 matchedPhraseTerms: s.moodMatch.matchedPhraseTerms,
                 phraseMatchedVerbatim: s.moodMatch.phraseMatchedVerbatim),
-            moodMatch: s.moodMatch)
+            moodMatch: s.moodMatch,
+            listenability: Self.listenability(from: r))
+    }
+
+    private static func listenability(from r: TrackVectorRecord) -> Listenability? {
+        guard let score = r.listenabilityScore else { return nil }
+        return Listenability(
+            score: score,
+            tier: r.listenabilityTier ?? "unknown",
+            decision: r.listenabilityDecision ?? "include",
+            stream: r.listenabilityStream ?? "default",
+            reasons: r.listenabilityReasons,
+            components: r.listenabilityComponents)
     }
 
     func buildQueryVector(from context: DiscoveryContext) async -> Embedding512 {

@@ -11,6 +11,7 @@ enum FeedbackEventType: String, Codable {
     case pillSelected
     case pillRemoved
     case moreLikeThis
+    case sourceOpened
 }
 
 struct FeedbackEvent: Codable, Identifiable {

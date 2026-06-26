@@ -2,15 +2,31 @@
 
 Live progress tracker for the Acalum iOS app.
 
-_Last updated: 2026-06-25 — Inline why breakdown phrase-match display._
+_Last updated: 2026-06-26 — Listenability gate, catalog-backed discovery, Previous, IA links, fade fix._
 
 ## Repo / branch
 
 - Repo: `/Users/arley/github/parso-acalum-ios-app`
 - **`main`** = All features merged. Builds + runs clean.
-- Latest: inline `MatchDetailsView` phrase-match display fix.
+- Latest: listenability/discovery/playback overhaul (`ACALUM_LISTENABILITY_DISCOVERY_PLAN.md`).
 
 ## What just shipped
+
+### Listenability, Discovery, and Playback overhaul
+
+Implements `ACALUM_LISTENABILITY_DISCOVERY_PLAN.md` (7 phases).
+
+- **Listenability catalog gate (Phase 1).** `LocalDatabase.loadTracks()` detects the indexer's `listenability_*` columns via `PRAGMA table_info` and, when present, filters the default catalog to `listenability_decision='include' AND listenability_stream='default'` (completed + embedded). Old DBs without the columns fall back to the prior query and log it. `TrackVectorRecord`/`Track` gained optional listenability fields (`Listenability` struct: score, tier, decision, stream, reasons, components; JSON reasons/components parsed). Verified bundled DB: **10** listenability columns, **16,246** include/default embedded tracks. No longform/excluded rows enter the default stream.
+- **Catalog-backed pills + Fit model (Phase 2).** New `PillRegistry` replaces the old mood-heavy set with **Sound / Style / Tradition / Listening Mode** pills grounded in real catalog counts (Classical, Orchestra, Baroque, Folk & World, Jazz, Opera, Vocal/Choir, Piano, Organ, Guitar, Latin/Bossa, African, Gregorian Chant, Indian Classical, Gamelan, Stage & Screen, Easy Listening, Romantic Era). `Pill` now splits `embeddingPhrase` (CLAP retrieval) from strict `metadataTerms`/`negativeTerms` (literal tag match). Listening-mode pills are semantic-only — they shape direction via CLAP and **never** assert a metadata match. `MoodMatchScorer` only counts metadata-capable pills toward the tag ratio, so generic words (`music`, `classical`) no longer create false "tag present" claims. UI/summary copy reframed Mood → **Fit/Direction**.
+- **Listenability ranking nudge (Phase 3).** `LocalRecommendationEngine` orders the queue by `wFit·fit + wLex·lex + wListen·listen` (0.50/0.30/0.20 with explicit intent; 0.45/0.25/0.30 promptless). Listenability never enters the displayed Fit index. Listenability is mapped onto each `Track`.
+- **Internet Archive links (Phase 4).** `openURL(track.sourceURL)` links on the Now Playing card, every Up Next row (trailing icon), and a full-width row in Track Info (which also shows a "Stream quality: tier (score)" line). Logs a `.sourceOpened` feedback event. Now Playing also exposes a Details button to open Track Info.
+- **Persistent Previous back stack (Phase 5).** New `PlaybackHistoryStore` (depth 50, persisted to `UserDefaults`, survives restarts). New Previous button (disabled when empty) and lock-screen Previous command. Previous pops the last listened track, places the current track at the front of upcoming (so Next returns to it), uses a previous-specific fade, and does **not** log skip/dislike.
+- **Fade reliability + remote semantics (Phase 6).** `AudioPlayerService` now tracks every scheduled volume-ramp work item and cancels them all before each transition (no stale ramps under rapid skip/previous/play). Previous uses `fadeOutIn(0.35, 0.55)`. Lock-screen **Next** now uses skip semantics (`onSkipRequested`), not completion, so it logs a skip rather than a play-completed.
+- **UI flow polish (Phase 7).** Up Next moved above the discovery controls. Discovery now offers **Update upcoming** (non-interrupting default) and **Play now** (immediate). Prompt bar gained a real **Update** button; clearing the prompt edits the draft only. Keyboard submit behaves like Update upcoming. Fit ring relabeled.
+
+Verification: full build **green**; **154** tests pass (added/updated `LocalDatabaseTests` listenability + fallback, `PillTests`, `MoodMatchScorerTests` strict-metadata + generic-word, `LocalRecommendationEngineTests` listenability ranking/Fit-isolation, `PlaybackHistoryStoreTests`, `PlayerViewModelTests` previous behavior + non-interrupting prompt).
+
+## What previously shipped
 
 ### Inline why breakdown phrase-match display
 - The visible inline **"`summary` · why"** breakdown now renders the existing phrase-match metadata from `MoodMatch`: matched prompt words plus the "Full phrase appears in metadata" badge when applicable.
@@ -87,7 +103,7 @@ _Last updated: 2026-06-25 — Inline why breakdown phrase-match display._
 | `Recommendation/` | Done — scorer, calibrator, recommendation engine, rotation, feedback, taste vector |
 
 ## Tests
-19 test files under `AcalumTests/`. 134 tests, all green. New: `PlayerViewModelTests` (upNext visible limit, skip preserves queue, apply replaces queue, moreLikeThis seed/log/clear, fade transition types); `PlaybackQueueTests` (replaceUpcoming, trimUpcoming, containsTrack); `LocalRecommendationEngineTests` (similarToTrack biases, mood respect, exclude recent/disliked); `Embedding512Tests` (weightedAdding).
+21 test files under `AcalumTests/`. 154 tests, all green. New since prior: `PlaybackHistoryStoreTests` (LIFO/dedup/capacity/persistence), listenability cases in `LocalDatabaseTests`, strict-metadata + generic-word cases in `MoodMatchScorerTests`, listenability ranking/Fit-isolation in `LocalRecommendationEngineTests`, Previous behavior + non-interrupting prompt in `PlayerViewModelTests`.
 
 ## Notes / decisions in effect
 - No accounts, no server dependency, offline-capable with downloads.

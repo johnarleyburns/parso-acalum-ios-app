@@ -22,7 +22,7 @@ struct MoodRingView: View {
                     .font(.system(size: size * 0.26, weight: .semibold, design: .rounded))
                     .monospacedDigit()
                 if showLabel {
-                    Text("MOOD")
+                    Text("FIT")
                         .font(.system(size: size * 0.13, weight: .semibold, design: .rounded))
                         .foregroundStyle(.secondary)
                 }
@@ -30,6 +30,6 @@ struct MoodRingView: View {
         }
         .frame(width: size, height: size)
         .accessibilityElement()
-        .accessibilityLabel("Mood match \(index) percent")
+        .accessibilityLabel("Fit \(index) percent")
     }
 }

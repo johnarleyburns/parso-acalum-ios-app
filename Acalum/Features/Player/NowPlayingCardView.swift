@@ -2,6 +2,9 @@ import SwiftUI
 
 struct NowPlayingCardView: View {
     let track: Track?
+    var onOpenSource: ((Track) -> Void)? = nil
+    var onShowInfo: (() -> Void)? = nil
+    @Environment(\.openURL) private var openURL
     @State private var detailsExpanded = false
 
     var body: some View {
@@ -22,6 +25,34 @@ struct NowPlayingCardView: View {
                             .font(.system(size: 11.5, design: .rounded))
                             .foregroundStyle(Color(.systemBrown))
                             .padding(.top, 4)
+
+                        HStack(spacing: 14) {
+                            if let sourceURL = track.sourceURL {
+                                Button {
+                                    onOpenSource?(track)
+                                    openURL(sourceURL)
+                                } label: {
+                                    Label("Internet Archive", systemImage: "arrow.up.right.square")
+                                        .font(.system(size: 12, weight: .medium, design: .rounded))
+                                }
+                                .buttonStyle(.plain)
+                                .foregroundStyle(Color.accentColor)
+                                .accessibilityLabel("Open this track on Internet Archive")
+                            }
+
+                            if onShowInfo != nil {
+                                Button {
+                                    onShowInfo?()
+                                } label: {
+                                    Label("Details", systemImage: "info.circle")
+                                        .font(.system(size: 12, weight: .medium, design: .rounded))
+                                }
+                                .buttonStyle(.plain)
+                                .foregroundStyle(Color.accentColor)
+                                .accessibilityLabel("Show track details")
+                            }
+                        }
+                        .padding(.top, 6)
                     }
                 }
 

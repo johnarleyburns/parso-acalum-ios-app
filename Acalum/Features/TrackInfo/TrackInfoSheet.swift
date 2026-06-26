@@ -2,6 +2,8 @@ import SwiftUI
 
 struct TrackInfoSheet: View {
     let track: Track?
+    var onOpenSource: ((Track) -> Void)? = nil
+    @Environment(\.openURL) private var openURL
 
     var body: some View {
         NavigationStack {
@@ -39,9 +41,23 @@ struct TrackInfoSheet: View {
                         }
                     }
 
+                    if let listenability = track.listenability {
+                        Section("Stream quality") {
+                            Text(listenability.qualitySummary)
+                                .accessibilityLabel("Stream quality \(listenability.tier), score \(String(format: "%.2f", listenability.score))")
+                        }
+                    }
+
                     if let sourceURL = track.sourceURL {
                         Section {
-                            Link("Open Source Page", destination: sourceURL)
+                            Button {
+                                onOpenSource?(track)
+                                openURL(sourceURL)
+                            } label: {
+                                Label("Open Internet Archive entry", systemImage: "arrow.up.right.square")
+                                    .frame(maxWidth: .infinity, alignment: .leading)
+                            }
+                            .accessibilityLabel("Open this track on Internet Archive")
                         }
                     }
                 } else {

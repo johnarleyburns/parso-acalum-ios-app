@@ -4,6 +4,7 @@ struct UpNextListView: View {
     let tracks: [Track]
     let hasNoStrongMatches: Bool
     let onTapTrack: ((Int) -> Void)?
+    var onOpenSource: ((Track) -> Void)? = nil
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
@@ -41,7 +42,7 @@ struct UpNextListView: View {
             }
 
             ForEach(Array(tracks.enumerated()), id: \.element.id) { i, track in
-                UpNextRowView(track: track, delay: Double(i) * 0.04)
+                UpNextRowView(track: track, delay: Double(i) * 0.04, onOpenSource: onOpenSource)
                     .onTapGesture {
                         onTapTrack?(i)
                     }
@@ -58,6 +59,8 @@ struct UpNextListView: View {
 private struct UpNextRowView: View {
     let track: Track
     let delay: Double
+    var onOpenSource: ((Track) -> Void)? = nil
+    @Environment(\.openURL) private var openURL
     @State private var expanded = false
 
     var body: some View {
@@ -78,6 +81,19 @@ private struct UpNextRowView: View {
                         .foregroundStyle(.secondary)
                 }
                 Spacer(minLength: 0)
+                if let sourceURL = track.sourceURL {
+                    Button {
+                        onOpenSource?(track)
+                        openURL(sourceURL)
+                    } label: {
+                        Image(systemName: "arrow.up.right.square")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                            .padding(4)
+                    }
+                    .buttonStyle(.plain)
+                    .accessibilityLabel("Open this track on Internet Archive")
+                }
                 Button {
                     withAnimation(.easeInOut(duration: 0.25)) { expanded.toggle() }
                 } label: {

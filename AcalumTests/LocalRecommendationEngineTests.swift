@@ -53,6 +53,18 @@ final class LocalRecommendationEngineTests: XCTestCase {
             durationSeconds: 180, sourceURL: nil, audioURL: nil, artURL: nil)
     }
 
+    private func recL(_ id: String, direction: Int, listen: Double) -> TrackVectorRecord {
+        var values = [Float](repeating: 0, count: Embedding512.dimension)
+        values[direction % Embedding512.dimension] = 1.0
+        return TrackVectorRecord(
+            id: id, title: "Track \(id)", composer: nil, performer: nil,
+            clapVector: try! Embedding512(values: values).normalized(), tags: nil,
+            albumTitle: nil, albumSubjects: nil, albumGenres: nil,
+            durationSeconds: 180, sourceURL: nil, audioURL: nil, artURL: nil,
+            listenabilityScore: listen, listenabilityTier: "good",
+            listenabilityDecision: "include", listenabilityStream: "default")
+    }
+
     private func makeEngine(catalog: [TrackVectorRecord],
                             searchService: LocalVectorSearchService,
                             textEmbedding: TextEmbeddingService? = nil) -> LocalRecommendationEngine {
@@ -187,5 +199,46 @@ final class LocalRecommendationEngineTests: XCTestCase {
         XCTAssertFalse(ids.contains("recent_match"), "Recently played track should be excluded")
         XCTAssertFalse(ids.contains("seed"), "Seed track itself should be excluded as recent")
         XCTAssertTrue(ids.contains("valid"), "Valid track should appear")
+    }
+
+    func testHigherListenabilityRanksAboveComparableLowerListenability() async {
+        // Two tracks with identical fit/lex but different listenability — the more
+        // listenable one should rank first (listenability is a ranking nudge).
+        let high = recL("high_listen", direction: 7, listen: 0.95)
+        let low = recL("low_listen", direction: 7, listen: 0.30)
+        let catalog = [high, low]
+        let engine = makeEngine(catalog: catalog, searchService: FakeSearchService(results: catalog))
+
+        let tracks = await engine.generateQueue(context: DiscoveryContext(prompt: nil))
+        let ids = tracks.map(\.id)
+        guard let hi = ids.firstIndex(of: "high_listen"),
+              let lo = ids.firstIndex(of: "low_listen") else {
+            XCTFail("Expected both tracks in results")
+            return
+        }
+        XCTAssertLessThan(hi, lo, "Higher listenability should rank above comparable lower listenability")
+    }
+
+    func testListenabilityDoesNotChangeFitIndex() async {
+        // Identical fit, different listenability → identical displayed Fit index.
+        let high = recL("a", direction: 7, listen: 0.95)
+        let low = recL("b", direction: 7, listen: 0.20)
+        let catalog = [high, low]
+        let engine = makeEngine(catalog: catalog, searchService: FakeSearchService(results: catalog))
+
+        let tracks = await engine.generateQueue(context: DiscoveryContext(prompt: nil))
+        let a = tracks.first(where: { $0.id == "a" })?.moodMatch?.index
+        let b = tracks.first(where: { $0.id == "b" })?.moodMatch?.index
+        XCTAssertNotNil(a)
+        XCTAssertEqual(a, b, "Fit index must not depend on listenability")
+    }
+
+    func testListenabilityAttachedToMappedTrack() async {
+        let rec = recL("x", direction: 7, listen: 0.88)
+        let engine = makeEngine(catalog: [rec], searchService: FakeSearchService(results: [rec]))
+        let tracks = await engine.generateQueue(context: DiscoveryContext(prompt: nil))
+        let track = tracks.first(where: { $0.id == "x" })
+        XCTAssertEqual(track?.listenability?.score ?? 0, 0.88, accuracy: 0.0001)
+        XCTAssertEqual(track?.listenability?.decision, "include")
     }
 }

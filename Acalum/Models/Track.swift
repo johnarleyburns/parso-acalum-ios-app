@@ -14,6 +14,23 @@ struct Track: Identifiable, Codable, Equatable {
     let year: Int?
     let explanation: TrackExplanation?
     var moodMatch: MoodMatch? = nil
+    var listenability: Listenability? = nil
+}
+
+/// Listenability answers "is this playable music for the default stream?" — kept
+/// separate from `MoodMatch`/Fit, which answers "does this match the requested sound?".
+struct Listenability: Codable, Equatable {
+    let score: Double
+    let tier: String
+    let decision: String
+    let stream: String
+    var reasons: [String] = []
+    var components: [String: Double] = [:]
+
+    /// User-safe one-line summary, e.g. "Stream quality: excellent (0.88)".
+    var qualitySummary: String {
+        String(format: "Stream quality: %@ (%.2f)", tier, score)
+    }
 }
 
 struct TrackExplanation: Codable, Equatable {

@@ -16,7 +16,8 @@ final class MoodMatchScorerTests: XCTestCase {
     func testMatchedPillProducesTrueComponent() {
         let scorer = MoodMatchScorer()
         let record = makeRecord(id: "t1", title: "Classical Guitar Sonata")
-        let pills = [Pill(id: "instrument:guitar", label: "Guitar", category: .instrument, semanticPhrase: "solo classical guitar")]
+        let pills = [Pill(id: "sound:guitar", label: "Guitar", category: .sound,
+                          embeddingPhrase: "classical guitar", metadataTerms: ["guitar"])]
         let result = scorer.score(record: record, clap: 0.5, recentIDs: [], pills: pills)
         let guitarComponent = result.moodMatch.components.first(where: { $0.label.contains("Guitar") })
         XCTAssertNotNil(guitarComponent)
@@ -26,11 +27,36 @@ final class MoodMatchScorerTests: XCTestCase {
     func testUnmatchedPillProducesFalseComponent() {
         let scorer = MoodMatchScorer()
         let record = makeRecord(id: "t1", title: "Trombone Concerto")
-        let pills = [Pill(id: "instrument:piano", label: "Piano", category: .instrument, semanticPhrase: "solo piano")]
+        let pills = [Pill(id: "sound:piano", label: "Piano", category: .sound,
+                          embeddingPhrase: "solo piano", metadataTerms: ["piano"])]
         let result = scorer.score(record: record, clap: 0.5, recentIDs: [], pills: pills)
         let pianoComponent = result.moodMatch.components.first(where: { $0.label.contains("Piano") })
         XCTAssertNotNil(pianoComponent)
         XCTAssertFalse(pianoComponent!.matched)
+    }
+
+    func testGenericWordDoesNotProduceTagMatch() {
+        let scorer = MoodMatchScorer()
+        // Listening-mode pills are semantic-only and must never claim a tag match,
+        // even when the row literally contains the word "music".
+        let record = makeRecord(id: "t1", title: "Background Music for Study", tags: ["music"])
+        let reading = Pill(id: "mode:reading", label: "Reading", category: .listeningMode,
+                           embeddingPhrase: "reading music, unobtrusive background music", metadataTerms: [])
+        let result = scorer.score(record: record, clap: 0.5, recentIDs: [], pills: [reading])
+        let component = result.moodMatch.components.first(where: { $0.label.contains("Reading") })
+        XCTAssertNotNil(component)
+        XCTAssertFalse(component!.matched, "Semantic-only pill must not assert a metadata match")
+    }
+
+    func testRomanticEraDoesNotMatchOnGenericClassical() {
+        let scorer = MoodMatchScorer()
+        let record = makeRecord(id: "t1", title: "A Classical Overture", tags: ["classical"])
+        let romantic = Pill(id: "tradition:romantic", label: "Romantic Era", category: .tradition,
+                            embeddingPhrase: "romantic era classical music", metadataTerms: ["romantic"])
+        let result = scorer.score(record: record, clap: 0.5, recentIDs: [], pills: [romantic])
+        let component = result.moodMatch.components.first(where: { $0.label.contains("Romantic") })
+        XCTAssertNotNil(component)
+        XCTAssertFalse(component!.matched, "Romantic Era should not match merely because the row is 'classical'")
     }
 
     func testAcousticComponentAlwaysPresentAndFirst() {
@@ -44,7 +70,8 @@ final class MoodMatchScorerTests: XCTestCase {
         let scorer = MoodMatchScorer()
         let rec1 = makeRecord(id: "high", title: "Guitar Concerto")
         let rec2 = makeRecord(id: "low", title: "Trombone Concerto")
-        let pills = [Pill(id: "instrument:guitar", label: "Guitar", category: .instrument, semanticPhrase: "solo classical guitar")]
+        let pills = [Pill(id: "sound:guitar", label: "Guitar", category: .sound,
+                          embeddingPhrase: "classical guitar", metadataTerms: ["guitar"])]
 
         let s1 = scorer.score(record: rec1, clap: 0.5, recentIDs: [], pills: pills)
         let s2 = scorer.score(record: rec2, clap: 0.5, recentIDs: [], pills: pills)
@@ -56,7 +83,7 @@ final class MoodMatchScorerTests: XCTestCase {
         let scorer = MoodMatchScorer()
         let record = makeRecord(id: "t1", title: "Test Track")
         let result = scorer.score(record: record, clap: 0.3, recentIDs: [], pills: [])
-        XCTAssertTrue(result.moodMatch.context.contains(where: { $0.contains("No mood selected") }))
+        XCTAssertTrue(result.moodMatch.context.contains(where: { $0.contains("No direction set") }))
     }
 
     func testIndexIsAlwaysZeroToHundred() {

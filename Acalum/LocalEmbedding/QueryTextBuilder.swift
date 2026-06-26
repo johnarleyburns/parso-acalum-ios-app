@@ -5,7 +5,7 @@ enum QueryTextBuilder {
         let trimmed = prompt.trimmingCharacters(in: .whitespacesAndNewlines)
 
         let phrases = pills.compactMap { pill -> String? in
-            let phrase = pill.semanticPhrase.trimmingCharacters(in: .whitespacesAndNewlines)
+            let phrase = pill.embeddingPhrase.trimmingCharacters(in: .whitespacesAndNewlines)
             return phrase.isEmpty ? pill.label.lowercased() : phrase
         }
         let qualities = phrases.joined(separator: ", ")

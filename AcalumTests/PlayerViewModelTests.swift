@@ -12,6 +12,7 @@ final class PlayerViewModelTests: XCTestCase {
         LocalStore.saveLastPillIDs([])
         LocalStore.saveFavorites([])
         SeenHistoryStore.clear()
+        PlaybackHistoryStore.clear()
     }
 
     func testTogglePillDoesNotChangeCommittedPills() {
@@ -114,7 +115,7 @@ final class PlayerViewModelTests: XCTestCase {
         XCTAssertFalse(audioService.didPlay, "togglePill should NOT auto-play")
     }
 
-    func testSubmitPromptAppliesAndPlays() async throws {
+    func testSubmitPromptCommitsAsUpdateUpcoming() async throws {
         let audioService = MockAudioPlayerService()
         let queueService = MockRecommenderQueueService()
 
@@ -127,10 +128,11 @@ final class PlayerViewModelTests: XCTestCase {
         vm.draftPrompt = "slow solo piano"
         vm.submitPrompt()
 
-        for _ in 0..<50 { await Task.yield(); if audioService.didPlay { break } }
+        for _ in 0..<50 { await Task.yield(); if vm.currentTrack != nil { break } }
 
+        // Prompt submit commits the draft (non-interrupting) and produces a stream.
         XCTAssertEqual(vm.committedPrompt, "slow solo piano")
-        XCTAssertTrue(audioService.didPlay, "submitPrompt should auto-play")
+        XCTAssertNotNil(vm.currentTrack)
     }
 
     func testSkipRegeneratesQueueFromCommittedPills() async throws {
@@ -417,6 +419,92 @@ final class PlayerViewModelTests: XCTestCase {
             XCTFail("Expected fadeIn transition from track finish")
         }
     }
+
+    func testPreviousDisabledInitiallyWhenHistoryEmpty() {
+        let vm = PlayerViewModel(
+            audioService: MockAudioPlayerService(),
+            feedbackTracker: FeedbackTracker(),
+            queueService: MockRecommenderQueueService()
+        )
+        XCTAssertFalse(vm.canGoPrevious, "Previous should be disabled with no history")
+    }
+
+    func testPreviousPlaysLastListenedTrack() async throws {
+        let audioService = MockAudioPlayerService()
+        let vm = PlayerViewModel(
+            audioService: audioService,
+            feedbackTracker: FeedbackTracker(),
+            queueService: MockRecommenderQueueService()
+        )
+
+        let piano = Pill(id: "sound:piano", label: "Piano", category: .sound,
+                         embeddingPhrase: "solo piano", metadataTerms: ["piano"])
+        vm.togglePill(piano)
+        vm.applyMood(startNow: true)
+        // Drain both the init refreshQueue task and the play-now task so currentTrack
+        // is stable before we exercise skip/previous.
+        for _ in 0..<300 { await Task.yield() }
+        XCTAssertNotNil(vm.currentTrack)
+
+        let firstID = vm.currentTrack?.id
+        vm.skip()
+        XCTAssertNotEqual(vm.currentTrack?.id, firstID)
+        XCTAssertTrue(vm.canGoPrevious)
+
+        vm.previous()
+        XCTAssertEqual(vm.currentTrack?.id, firstID, "Previous should return the last listened track")
+    }
+
+    func testNextAfterPreviousReturnsToTrackUserCameFrom() async throws {
+        let audioService = MockAudioPlayerService()
+        let vm = PlayerViewModel(
+            audioService: audioService,
+            feedbackTracker: FeedbackTracker(),
+            queueService: MockRecommenderQueueService()
+        )
+
+        let piano = Pill(id: "sound:piano", label: "Piano", category: .sound,
+                         embeddingPhrase: "solo piano", metadataTerms: ["piano"])
+        vm.togglePill(piano)
+        vm.applyMood(startNow: true)
+        for _ in 0..<300 { await Task.yield() }
+        XCTAssertNotNil(vm.currentTrack)
+
+        let firstID = vm.currentTrack?.id
+        vm.skip()
+        let cameFromID = vm.currentTrack?.id
+        XCTAssertNotEqual(cameFromID, firstID)
+
+        vm.previous()
+        XCTAssertEqual(vm.currentTrack?.id, firstID)
+
+        vm.skip()
+        XCTAssertEqual(vm.currentTrack?.id, cameFromID, "Next after Previous returns to where the user came from")
+    }
+
+    func testPreviousUsesPreviousFadeTransition() async throws {
+        let audioService = MockAudioPlayerService()
+        let vm = PlayerViewModel(
+            audioService: audioService,
+            feedbackTracker: FeedbackTracker(),
+            queueService: MockRecommenderQueueService()
+        )
+
+        let piano = Pill(id: "sound:piano", label: "Piano", category: .sound,
+                         embeddingPhrase: "solo piano", metadataTerms: ["piano"])
+        vm.togglePill(piano)
+        vm.applyMood(startNow: true)
+        for _ in 0..<300 { await Task.yield() }
+        vm.skip()
+
+        vm.previous()
+        if case .fadeOutIn(let out, let `in`) = audioService.lastTransition {
+            XCTAssertEqual(out, 0.35, accuracy: 0.01)
+            XCTAssertEqual(`in`, 0.55, accuracy: 0.01)
+        } else {
+            XCTFail("Expected previous-specific fadeOutIn transition")
+        }
+    }
 }
 
 final class MockAudioPlayerService: AudioPlayerServiceProtocol, ObservableObject {
@@ -439,6 +527,8 @@ final class MockAudioPlayerService: AudioPlayerServiceProtocol, ObservableObject
     var lastNowPlayingTrack: Track?
 
     var onTrackFinished: (() -> Void)?
+    var onSkipRequested: (() -> Void)?
+    var onPreviousRequested: (() -> Bool)?
     var onInterruptionBegan: (() -> Void)?
     var onInterruptionEnded: (() -> Void)?
     var onPlaybackFailed: (() -> Void)?

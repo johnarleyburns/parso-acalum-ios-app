@@ -27,6 +27,7 @@ final class PlayerViewModel: ObservableObject {
     @Published private(set) var upNext: [Track] = []
     @Published private(set) var moreLikeThisTrackID: String?
     @Published private(set) var moodTransition: MoodTransition?
+    @Published private(set) var canGoPrevious: Bool = !PlaybackHistoryStore.isEmpty
 
     private enum QueueSizing {
         static let visibleUpNextLimit = 4
@@ -147,6 +148,16 @@ final class PlayerViewModel: ObservableObject {
             self?.handleTrackFinished()
         }
 
+        audioService.onSkipRequested = { [weak self] in
+            self?.skip()
+        }
+
+        audioService.onPreviousRequested = { [weak self] in
+            guard let self, !PlaybackHistoryStore.isEmpty else { return false }
+            self.previous()
+            return true
+        }
+
         audioService.onInterruptionBegan = { [weak self] in
             self?.audioService.pause()
         }
@@ -264,7 +275,12 @@ final class PlayerViewModel: ObservableObject {
         HapticFeedback.selection()
     }
 
-    func submitPrompt() { applyMood(startNow: true) }
+    /// Logs that the user opened a track's Internet Archive source page.
+    func recordSourceOpened(_ track: Track) {
+        feedbackTracker.log(type: .sourceOpened, trackID: track.id, selectedPillIDs: committedPills.map(\.id))
+    }
+
+    func submitPrompt() { applyMood(startNow: false) }
 
     func applyMood(startNow: Bool = false) {
         let fromSignature = MoodSignature(
@@ -287,7 +303,15 @@ final class PlayerViewModel: ObservableObject {
         LocalStore.saveLastPrompt(committedPrompt.isEmpty ? nil : committedPrompt)
         SeenHistoryStore.clear()
         moreLikeThisTrackID = nil
-        if startNow { replaceQueueAndPlay() } else { refreshUpcoming() }
+        if startNow {
+            replaceQueueAndPlay()
+        } else if currentTrack == nil {
+            // Nothing is playing yet (e.g. first run) — start the stream rather
+            // than silently staging upcoming tracks behind an empty Now Playing.
+            replaceQueueAndPlay()
+        } else {
+            refreshUpcoming()
+        }
     }
 
     func shakeItUp() {
@@ -298,23 +322,51 @@ final class PlayerViewModel: ObservableObject {
     }
 
     private static func randomCoherentPills(excluding current: Set<Pill>) -> Set<Pill> {
-        func pick(_ c: PillCategory) -> Pill? { MockData.pills.filter { $0.category == c }.randomElement() }
+        func pick(_ c: PillCategory) -> Pill? { PillRegistry.all.filter { $0.category == c }.randomElement() }
         var next: Set<Pill> = []
         repeat {
             next = []
-            if let m = pick(.mood) { next.insert(m) }
-            if Bool.random(), let i = pick(.instrument) { next.insert(i) }
-            if Bool.random(), let x = pick(Bool.random() ? .context : .era) { next.insert(x) }
+            if let s = pick(.style) { next.insert(s) }
+            if Bool.random(), let snd = pick(.sound) { next.insert(snd) }
+            if Bool.random(), let x = pick(Bool.random() ? .tradition : .listeningMode) { next.insert(x) }
         } while next == current || next.isEmpty
         return next
     }
 
-    private func surface(_ track: Track, transition: AudioTransition = .immediate) {
+    private func surface(_ track: Track, transition: AudioTransition = .immediate, recordPrevious: Bool = true) {
+        // Push the outgoing track onto the persistent back stack so Previous can
+        // return to it. Skipped when stepping backward (recordPrevious == false).
+        if recordPrevious, let outgoing = currentTrack, outgoing.id != track.id {
+            PlaybackHistoryStore.push(outgoing)
+            refreshCanGoPrevious()
+        }
         currentTrack = track
         audioService.play(url: resolveAudioURL(for: track), transition: transition)
         audioService.updateNowPlaying(track: track)
         feedbackTracker.log(type: .playStarted, trackID: track.id, selectedPillIDs: committedPills.map(\.id))
         SeenHistoryStore.record(track.id)
+    }
+
+    /// Plays the most recently listened track from the persistent back stack.
+    /// Does not log skip/dislike feedback. Places the current track at the front
+    /// of upcoming so Next returns to where the user came from. Persists history.
+    func previous() {
+        guard let prev = PlaybackHistoryStore.pop() else {
+            refreshCanGoPrevious()
+            return
+        }
+        HapticFeedback.light()
+        if let current = currentTrack {
+            queue.upcoming.insert(current, at: 0)
+        }
+        queue.current = prev
+        surface(prev, transition: .fadeOutIn(out: 0.35, in: 0.55), recordPrevious: false)
+        publishUpNext()
+        refreshCanGoPrevious()
+    }
+
+    private func refreshCanGoPrevious() {
+        canGoPrevious = !PlaybackHistoryStore.isEmpty
     }
 
     private var offlineTrackIDs: Set<String>? {
@@ -354,8 +406,13 @@ final class PlayerViewModel: ObservableObject {
     }
 
     private func replaceQueueAndPlay() {
+        let outgoing = currentTrack
         audioService.stop()
         currentTrack = nil
+        if let outgoing {
+            PlaybackHistoryStore.push(outgoing)
+            refreshCanGoPrevious()
+        }
 
         Task { @MainActor [weak self] in
             guard let self else { return }

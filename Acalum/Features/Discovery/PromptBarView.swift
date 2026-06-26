@@ -2,6 +2,7 @@ import SwiftUI
 
 struct PromptBarView: View {
     @Binding var prompt: String
+    /// Commits the prompt draft (Update upcoming semantics — non-interrupting).
     let onSubmit: () -> Void
 
     var body: some View {
@@ -10,40 +11,32 @@ struct PromptBarView: View {
                 .font(AcalumTypography.body)
                 .textFieldStyle(.plain)
                 .onSubmit(onSubmit)
-                .submitLabel(.search)
-                .accessibilityLabel("Describe how the music should feel")
+                .submitLabel(.go)
+                .accessibilityLabel("Describe the direction for your stream")
 
             if !prompt.isEmpty {
-                Text("\u{21B5} to apply")
-                    .font(.system(size: 10.5, weight: .medium, design: .rounded))
-                    .foregroundStyle(Color(.systemGray2))
-                    .padding(.horizontal, 6)
-                    .padding(.vertical, 2)
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 6)
-                            .strokeBorder(Color(.systemGray4), lineWidth: 1)
-                    )
-            } else {
-                Text("\u{21B5} to apply")
-                    .font(.system(size: 10.5, weight: .medium, design: .rounded))
-                    .foregroundStyle(Color(.systemGray3))
-                    .padding(.horizontal, 6)
-                    .padding(.vertical, 2)
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 6)
-                            .strokeBorder(Color(.systemGray4), lineWidth: 1)
-                    )
-            }
-
-            if !prompt.isEmpty {
-                Button(action: {
+                // Clear edits the draft only — it does not commit or change playback.
+                Button {
                     prompt = ""
-                    onSubmit()
-                }) {
+                } label: {
                     Image(systemName: "xmark.circle.fill")
                         .foregroundStyle(.secondary)
                 }
-                .accessibilityLabel("Clear prompt")
+                .buttonStyle(.plain)
+                .accessibilityLabel("Clear prompt draft")
+
+                Button {
+                    onSubmit()
+                } label: {
+                    Text("Update")
+                        .font(.system(size: 13, weight: .semibold, design: .rounded))
+                        .padding(.horizontal, 12)
+                        .padding(.vertical, 6)
+                        .background(Capsule().fill(Color.accentColor))
+                        .foregroundStyle(.white)
+                }
+                .buttonStyle(.plain)
+                .accessibilityLabel("Update upcoming with this prompt")
             }
         }
         .padding(.horizontal, AcalumSpacing.md)

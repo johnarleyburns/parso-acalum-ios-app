@@ -16,7 +16,11 @@ struct PlayerHomeView: View {
                 )
                 .padding(.horizontal, AcalumSpacing.xxl)
 
-                NowPlayingCardView(track: viewModel.currentTrack)
+                NowPlayingCardView(
+                    track: viewModel.currentTrack,
+                    onOpenSource: { viewModel.recordSourceOpened($0) },
+                    onShowInfo: { viewModel.activeSheet = .trackInfo }
+                )
 
                 if viewModel.currentTrack == nil {
                     if viewModel.isInitialLoading || viewModel.playbackState == .loading {
@@ -30,7 +34,9 @@ struct PlayerHomeView: View {
                     PlaybackControlsView(
                         isPlaying: viewModel.isPlaying,
                         isFavorited: viewModel.isFavorited,
+                        canGoPrevious: viewModel.canGoPrevious,
                         onFavorite: viewModel.toggleFavorite,
+                        onPrevious: viewModel.previous,
                         onPlayPause: viewModel.togglePlayPause,
                         onSkip: viewModel.skip,
                         onMoreLikeThis: { viewModel.moreLikeThis() }
@@ -41,6 +47,18 @@ struct PlayerHomeView: View {
                     errorBanner(message: message)
                 }
 
+                if !viewModel.upNext.isEmpty {
+                    let hasPillsOrPrompt = !viewModel.committedPills.isEmpty || !viewModel.committedPrompt.isEmpty
+                    let noStrong = hasPillsOrPrompt && viewModel.upNext.allSatisfy { ($0.moodMatch?.index ?? 0) < 40 }
+                    UpNextListView(
+                        tracks: viewModel.upNext,
+                        hasNoStrongMatches: noStrong,
+                        onTapTrack: { viewModel.playFromUpNext(at: $0) },
+                        onOpenSource: { viewModel.recordSourceOpened($0) }
+                    )
+                    .padding(.horizontal, AcalumSpacing.sm)
+                }
+
                 Divider()
                     .padding(.horizontal, AcalumSpacing.xs)
 
@@ -49,7 +67,8 @@ struct PlayerHomeView: View {
                     selectedPills: viewModel.draftPills,
                     pendingMoodChange: viewModel.pendingMoodChange,
                     onToggle: viewModel.togglePill,
-                    onApply: { viewModel.applyMood(startNow: true) },
+                    onUpdate: { viewModel.applyMood(startNow: false) },
+                    onPlayNow: { viewModel.applyMood(startNow: true) },
                     onShake: viewModel.shakeItUp
                 )
                 .padding(.horizontal, AcalumSpacing.sm)
@@ -59,17 +78,6 @@ struct PlayerHomeView: View {
                     onSubmit: viewModel.submitPrompt
                 )
                 .padding(.horizontal, AcalumSpacing.sm)
-
-                if !viewModel.upNext.isEmpty {
-                    let hasPillsOrPrompt = !viewModel.committedPills.isEmpty || !viewModel.committedPrompt.isEmpty
-                    let noStrong = hasPillsOrPrompt && viewModel.upNext.allSatisfy { ($0.moodMatch?.index ?? 0) < 40 }
-                    UpNextListView(
-                        tracks: viewModel.upNext,
-                        hasNoStrongMatches: noStrong,
-                        onTapTrack: { viewModel.playFromUpNext(at: $0) }
-                    )
-                    .padding(.horizontal, AcalumSpacing.sm)
-                }
 
                 Spacer(minLength: AcalumSpacing.lg)
             }
@@ -81,7 +89,7 @@ struct PlayerHomeView: View {
             case .whyThis:
                 WhyThisSheet(track: viewModel.currentTrack)
             case .trackInfo:
-                TrackInfoSheet(track: viewModel.currentTrack)
+                TrackInfoSheet(track: viewModel.currentTrack, onOpenSource: { viewModel.recordSourceOpened($0) })
             case .settings:
                 SettingsSheet()
             }

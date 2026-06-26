@@ -2,13 +2,16 @@
 
 An iOS app for continuous public-domain music discovery using semantic similarity search over CLAP embeddings, MFCC, chroma, metadata, and user feedback. No accounts, no server dependency, offline-capable.
 
-Users shape a single continuous stream via instrument/mood/context/era pills, freeform natural-language prompts, skips, favorites, and listening duration.
+Users shape a single continuous stream via Sound / Style / Tradition / Listening Mode pills, freeform natural-language prompts, skips, favorites, and listening duration.
 
 ## Current Status
 
-- **v0.1.0** — Core player, mood matching, background audio, offline downloads, splash, app icon.
-- **Retrieval:** hybrid — lexical metadata match (curated `tags`/genres/title) unioned with CLAP cosine. Prompts and pills both drive retrieval; degrades to lexical (never random) when the CLAP text model is not bundled.
-- **Why breakdown:** inline match details show acoustic/tag components, freshness context, and matched prompt words when the phrase appears in track metadata.
+- **v0.1.0** — Core player, Fit matching, background audio, offline downloads, splash, app icon.
+- **Listenable catalog:** the default stream is gated to the indexer's listenability `include`/`default` tracks (~16k), so short clips, sound effects, speech, channel dumps, and overlong tracks are excluded.
+- **Discovery:** catalog-backed pills grouped as **Sound** (instruments/ensembles), **Style** (genre/form), **Tradition** (period/region/collection), and **Listening Mode** (quiet, focus, reading, sleep, explore — semantic direction only). Pills split their CLAP phrase from strict metadata terms so generic words don't claim false tag matches.
+- **Retrieval:** hybrid — lexical metadata match (curated `tags`/genres/title) unioned with CLAP cosine. Listenability is a ranking nudge only and never enters the displayed Fit index. Degrades to lexical (never random) when the CLAP text model is not bundled.
+- **Playback:** Update upcoming (non-interrupting) vs Play now; a persistent Previous back stack (depth 50, survives restarts); reliable fades under rapid skip/previous/play; lock-screen Previous/Next wired with skip semantics.
+- **Links:** every visible track has an Internet Archive link (Now Playing, Up Next rows, Track Info).
 - **Build:** Green on iOS 17+ simulator and device.
 - See [`current_state.md`](current_state.md) for detailed module status and recent changes.
 

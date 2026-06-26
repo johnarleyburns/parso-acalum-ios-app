@@ -1,30 +1,7 @@
 import Foundation
 
 enum MockData {
-    static let pills: [Pill] = [
-        Pill(id: "instrument:guitar", label: "Guitar", category: .instrument, semanticPhrase: "solo classical guitar"),
-        Pill(id: "instrument:piano", label: "Piano", category: .instrument, semanticPhrase: "solo piano"),
-        Pill(id: "instrument:violin", label: "Violin", category: .instrument, semanticPhrase: "solo violin, strings"),
-        Pill(id: "instrument:choir", label: "Choir", category: .instrument, semanticPhrase: "choral voices, choir"),
-        Pill(id: "instrument:organ", label: "Organ", category: .instrument, semanticPhrase: "pipe organ, church organ"),
-        Pill(id: "instrument:orchestra", label: "Orchestra", category: .instrument, semanticPhrase: "full orchestra, symphonic"),
-        Pill(id: "mood:calm", label: "Calm", category: .mood, semanticPhrase: "calm, peaceful"),
-        Pill(id: "mood:melancholy", label: "Melancholy", category: .mood, semanticPhrase: "melancholy, sad, reflective"),
-        Pill(id: "mood:joyful", label: "Joyful", category: .mood, semanticPhrase: "joyful, uplifting, happy"),
-        Pill(id: "mood:sacred", label: "Sacred", category: .mood, semanticPhrase: "sacred, spiritual, devotional"),
-        Pill(id: "mood:romantic", label: "Romantic", category: .mood, semanticPhrase: "romantic, tender, warm"),
-        Pill(id: "mood:nostalgic", label: "Nostalgic", category: .mood, semanticPhrase: "nostalgic, wistful, old-fashioned"),
-        Pill(id: "context:reading", label: "Reading", category: .context, semanticPhrase: "reading music, unobtrusive background music"),
-        Pill(id: "context:sleep", label: "Sleep", category: .context, semanticPhrase: "sleep music, soothing, very quiet"),
-        Pill(id: "context:focus", label: "Focus", category: .context, semanticPhrase: "focus music, concentration, ambient"),
-        Pill(id: "context:rainy_day", label: "Rainy Day", category: .context, semanticPhrase: "rainy day, contemplative, indoor"),
-        Pill(id: "context:late_night", label: "Late Night", category: .context, semanticPhrase: "late night, quiet, intimate"),
-        Pill(id: "era:baroque", label: "Baroque", category: .era, semanticPhrase: "baroque, harpsichord, counterpoint, 1600s 1700s"),
-        Pill(id: "era:romantic", label: "Romantic Era", category: .era, semanticPhrase: "romantic era classical music, 1800s"),
-        Pill(id: "era:medieval", label: "Medieval", category: .era, semanticPhrase: "medieval, ancient, gregorian, early music"),
-        Pill(id: "era:jazz_age", label: "Jazz Age", category: .era, semanticPhrase: "jazz age, 1920s, swing, early jazz"),
-        Pill(id: "era:early_1900s", label: "Early 1900s", category: .era, semanticPhrase: "early 1900s, vintage recordings, old recordings"),
-    ]
+    static let pills: [Pill] = PillRegistry.all
 
     static var tracks: [Track] { makeMockTracks() }
 

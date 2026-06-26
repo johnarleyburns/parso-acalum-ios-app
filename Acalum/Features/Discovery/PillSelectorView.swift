@@ -5,11 +5,12 @@ struct PillSelectorView: View {
     let selectedPills: Set<Pill>
     let pendingMoodChange: Bool
     let onToggle: (Pill) -> Void
-    let onApply: () -> Void
+    let onUpdate: () -> Void
+    let onPlayNow: () -> Void
     let onShake: () -> Void
 
     private var grouped: [(PillCategory, [Pill])] {
-        let categories: [PillCategory] = [.instrument, .mood, .context, .era]
+        let categories: [PillCategory] = [.sound, .style, .tradition, .listeningMode]
         return categories.compactMap { category in
             let items = pills.filter { $0.category == category }
             return items.isEmpty ? nil : (category, items)
@@ -19,7 +20,7 @@ struct PillSelectorView: View {
     var body: some View {
         VStack(alignment: .leading, spacing: AcalumSpacing.sm) {
             HStack {
-                Text("How should the music feel?")
+                Text("Shape your stream")
                     .font(AcalumTypography.caption)
                     .foregroundStyle(.secondary)
                 Spacer()
@@ -32,12 +33,12 @@ struct PillSelectorView: View {
                         .overlay(Capsule().strokeBorder(.orange, lineWidth: 1))
                 }
                 .tint(.orange)
-                .accessibilityHint("Switches to a new random mood")
+                .accessibilityHint("Switches to a new random direction")
             }
             .padding(.horizontal, AcalumSpacing.xs)
 
             ForEach(grouped, id: \.0) { (category, categoryPills) in
-                Text(category.rawValue)
+                Text(category.displayName)
                     .font(.system(size: 11, weight: .semibold, design: .rounded))
                     .foregroundStyle(.tertiary)
                     .textCase(.uppercase)
@@ -57,17 +58,32 @@ struct PillSelectorView: View {
             }
 
             if pendingMoodChange {
-                Button(action: onApply) {
-                    Label("Apply new mood", systemImage: "checkmark.circle.fill")
-                        .font(AcalumTypography.headline)
-                        .frame(maxWidth: .infinity)
-                        .padding(.vertical, 13)
-                        .background(RoundedRectangle(cornerRadius: 14).fill(Color.accentColor))
-                        .foregroundStyle(.white)
+                HStack(spacing: AcalumSpacing.sm) {
+                    Button(action: onUpdate) {
+                        Label("Update upcoming", systemImage: "checkmark.circle.fill")
+                            .font(AcalumTypography.headline)
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 13)
+                            .background(RoundedRectangle(cornerRadius: 14).fill(Color.accentColor))
+                            .foregroundStyle(.white)
+                    }
+                    .accessibilityHint("Reshapes the queue without interrupting the current track")
+
+                    Button(action: onPlayNow) {
+                        Label("Play now", systemImage: "play.fill")
+                            .font(AcalumTypography.headline)
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 13)
+                            .background(
+                                RoundedRectangle(cornerRadius: 14)
+                                    .strokeBorder(Color.accentColor, lineWidth: 1.5)
+                            )
+                            .foregroundStyle(Color.accentColor)
+                    }
+                    .accessibilityHint("Replaces the current track immediately")
                 }
                 .padding(.top, AcalumSpacing.xs)
                 .transition(.move(edge: .top).combined(with: .opacity))
-                .accessibilityHint("Updates your stream with the pills you changed")
             }
         }
         .animation(.easeInOut(duration: 0.3), value: pendingMoodChange)
